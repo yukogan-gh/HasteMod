@@ -47,14 +47,18 @@ public class BlockBreaker {
                 }
             }
         }
+
     }
 
-    public void onBlockBreak(BlockState state, MinecraftClient client) {
-        if (client.player == null) return;
-        if (client.player.getUuid() != MinecraftClient.getInstance().player.getUuid()) return;
+    public boolean onBlockBreak(BlockPos pos, MinecraftClient client) {
+        if (client.player == null) return true;
+        if (client.player.getUuid() != MinecraftClient.getInstance().player.getUuid()) return true;
+        BlockState state = client.world.getBlockState(pos);
+
         if (updateBlock(state.getBlock())) {
             client.player.sendMessage(Text.of("§eSelected block: §3" + state.getBlock().getName().getString()));
         }
+        return true;
     }
 
     public boolean updateBlock(Block block) {
