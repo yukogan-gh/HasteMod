@@ -15,11 +15,12 @@ public class BlockBreaker {
     private final Direction direction = Direction.UP;
     private Block lastMinedBlock = null;
     private boolean enabled = false;
+    private boolean blockSelEnabled = true;
     private final int range = 4;
 
     @Environment(EnvType.CLIENT)
     public void tryBreak(BlockPos blockPos, MinecraftClient client) {
-        if (!client.world.getBlockState(blockPos).isAir() && Objects.equals(client.world.getBlockState(blockPos).getBlock(), lastMinedBlock)) {
+        if (!client.world.getBlockState(blockPos).isAir() && (!blockSelEnabled || Objects.equals(client.world.getBlockState(blockPos).getBlock(), lastMinedBlock))) {
             client.interactionManager.attackBlock(blockPos, direction);
             client.interactionManager.updateBlockBreakingProgress(blockPos, this.direction);
         }
@@ -36,23 +37,31 @@ public class BlockBreaker {
                 return;
             }
         }
-        if (lastMinedBlock == null || !enabled) return;
+        if (HasteModClient.getToggleBlockSelKey().wasPressed() && !client.isPaused()) {
+            blockSelEnabled = !blockSelEnabled;
+            if(blockSelEnabled) {
+                client.player.sendMessage(Text.of("§eToggled Block Selection Mode to §aon"));
+            } else {
+                client.player.sendMessage(Text.of("§eToggled Block Selection Mode to §doff"));
+            }
+        }
+        if ((lastMinedBlock == null && blockSelEnabled) || !enabled ) return;
         if (HasteModClient.getActivateKey().isPressed()) {
-            for (int x = client.player.getBlockPos().getX() - range; x < client.player.getBlockPos().getX() + range; x++) {
-                for (int y = client.player.getBlockPos().getY(); y < client.player.getBlockPos().getY() + range; y++) {
-                    for (int z = client.player.getBlockPos().getZ() - range; z < client.player.getBlockPos().getZ() + range; z++) {
+            for (int x = client.player.getBlockPos().getX() - range; x <= client.player.getBlockPos().getX() + range; x++) {
+                for (int y = client.player.getBlockPos().getY(); y <= client.player.getBlockPos().getY() + range; y++) {
+                    for (int z = client.player.getBlockPos().getZ() - range; z <= client.player.getBlockPos().getZ() + range; z++) {
                         BlockPos nbp = new BlockPos(x, y, z);
                         tryBreak(nbp, client);
                     }
                 }
             }
         }
-
     }
 
     public boolean onBlockBreak(BlockPos pos, MinecraftClient client) {
         if (client.player == null) return true;
         if (client.player.getUuid() != MinecraftClient.getInstance().player.getUuid()) return true;
+        if(!blockSelEnabled) return true;
         BlockState state = client.world.getBlockState(pos);
 
         if (updateBlock(state.getBlock())) {

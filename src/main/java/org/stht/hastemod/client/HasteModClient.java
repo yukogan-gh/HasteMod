@@ -21,6 +21,7 @@ import org.lwjgl.glfw.GLFW;
 public class HasteModClient implements ClientModInitializer {
     private static KeyBinding useKey;
     private static KeyBinding toggleKey;
+    private static KeyBinding toggleBlockSelKey;
     private static BlockBreaker bbreaker = new BlockBreaker();
 
     @Override
@@ -41,6 +42,12 @@ public class HasteModClient implements ClientModInitializer {
                 "HasteMod"
         ));
 
+        toggleBlockSelKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        "Toggle Block Selection Mode on/off",
+        InputUtil.Type.KEYSYM,
+        GLFW.GLFW_KEY_Y,
+        "HasteMod"
+        ));
 
         ClientTickEvents.END_CLIENT_TICK.register((tick) -> bbreaker.onTick(MinecraftClient.getInstance()));
         //PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> bbreaker.onBlockBreak(state, MinecraftClient.getInstance()));
@@ -54,6 +61,10 @@ public class HasteModClient implements ClientModInitializer {
 
     public static KeyBinding getToggleKey() {
         return toggleKey;
+    }
+
+    public static KeyBinding getToggleBlockSelKey() {
+        return toggleBlockSelKey;
     }
 
     public static void onBlockBreak(BlockPos pos) {
