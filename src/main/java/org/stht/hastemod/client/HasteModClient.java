@@ -43,14 +43,18 @@ public class HasteModClient implements ClientModInitializer {
         ));
 
         toggleBlockSelKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-        "Toggle Block Selection Mode on/off",
-        InputUtil.Type.KEYSYM,
-        GLFW.GLFW_KEY_Y,
-        "HasteMod"
+                "Toggle Block Selection Mode on/off",
+                InputUtil.Type.KEYSYM,
+                GLFW.GLFW_KEY_Y,
+                "HasteMod"
         ));
 
-        ClientTickEvents.END_CLIENT_TICK.register((tick) -> bbreaker.onTick(MinecraftClient.getInstance()));
-        //PlayerBlockBreakEvents.BEFORE.register((world, player, pos, state, entity) -> bbreaker.onBlockBreak(state, MinecraftClient.getInstance()));
+        ClientTickEvents.END_CLIENT_TICK.register((tick) -> bbreaker.onTick(MinecraftClient.getInstance()));/*
+        ClientTickEvents.START_CLIENT_TICK.register((tick) -> {
+            if (!bbreaker.isBreaking || MinecraftClient.getInstance().player == null) return;
+            bbreaker.isBreaking = false;
+            MinecraftClient.getInstance().interactionManager.cancelBlockBreaking();
+        });*/
 
         System.out.println("Initialized HasteMod");
     }
