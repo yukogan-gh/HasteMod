@@ -53,18 +53,18 @@ public class BlockBreaker {
         if (HasteModClient.getToggleKey().wasPressed() && !client.isPaused()) {
             enabled = !enabled;
             if (enabled) {
-                client.player.sendMessage(Text.of("§eToggled HasteMod to §aon"));
+                client.player.sendMessage(Text.of("§eToggled HasteMod to §aon"), false);
             } else {
-                client.player.sendMessage(Text.of("§eToggled HasteMod to §coff"));
+                client.player.sendMessage(Text.of("§eToggled HasteMod to §coff"), false);
                 return;
             }
         }
         if (HasteModClient.getToggleBlockSelKey().wasPressed() && !client.isPaused()) {
             blockSelEnabled = !blockSelEnabled;
             if (blockSelEnabled) {
-                client.player.sendMessage(Text.of("§eToggled §dBlock Selection Mode §eto §aon"));
+                client.player.sendMessage(Text.of("§eToggled §dBlock Selection Mode §eto §aon"), false);
             } else {
-                client.player.sendMessage(Text.of("§eToggled §dBlock Selection Mode §eto §coff"));
+                client.player.sendMessage(Text.of("§eToggled §dBlock Selection Mode §eto §coff"), false);
             }
         }
         if ((lastMinedBlock == null && blockSelEnabled) || !enabled ) return;
@@ -89,7 +89,7 @@ public class BlockBreaker {
         BlockState state = client.world.getBlockState(pos);
 
         if (updateBlock(state.getBlock())) {
-            client.player.sendMessage(Text.of("§eSelected block: §3" + state.getBlock().getName().getString()));
+            client.player.sendMessage(Text.of("§eSelected block: §3" + state.getBlock().getName().getString()), false);
         }
     }
 
