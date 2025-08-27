@@ -25,15 +25,15 @@ public class BlockBreaker {
         }
         BlockState state = client.world.getBlockState(blockPos);
         if (!state.isAir() && (!blockSelEnabled || Objects.equals(client.world.getBlockState(blockPos).getBlock(), lastMinedBlock))) {
-            float speed = getMineSpeed(client, client.player.getInventory().selectedSlot, state);
+            float speed = getMineSpeed(client, client.player.getInventory().getSelectedSlot(), state);
             if (speed <= 1.0f) {
-                for (int i = 0; i < client.player.getInventory().main.size(); i++) {
+                for (int i = 0; i < client.player.getInventory().getMainStacks().size(); i++) {
 
                     float newSpeed = getMineSpeed(client, i, state);
 
                     if (newSpeed > 1.0f) {
-                        if (client.player.getInventory().selectedSlot == i) break;
-                        client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, 36 + client.player.getInventory().selectedSlot, i, SlotActionType.SWAP, client.player);
+                        if (client.player.getInventory().getSelectedSlot() == i) break;
+                        client.interactionManager.clickSlot(client.player.currentScreenHandler.syncId, 36 + client.player.getInventory().getSelectedSlot(), i, SlotActionType.SWAP, client.player);
                         break;
                     }
                 }
@@ -45,7 +45,7 @@ public class BlockBreaker {
 
     private float getMineSpeed(MinecraftClient client, int slot, BlockState blockState) {
         if (client.player == null) return 1.0f;
-        return client.player.getInventory().main.get(slot).getMiningSpeedMultiplier(blockState);
+        return client.player.getInventory().getMainStacks().get(slot).getMiningSpeedMultiplier(blockState);
     }
 
     public void onTick(MinecraftClient client) {
