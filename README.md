@@ -1,3 +1,6 @@
+<img width="200" height="200" alt="logo" src="https://github.com/user-attachments/assets/4d2ec87a-e229-4bc0-b8ca-6174d8c1e20e" />
+
+
 # HasteMod
 A client-side mod that abuses the instamine feature to very quickly mine set types of blocks.
 
