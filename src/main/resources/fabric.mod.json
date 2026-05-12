@@ -16,10 +16,10 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "org.stht.client.HasteModClient"
+      "org.stht.hastemod.client.HasteModClient"
     ],
-    "main": [
-      "org.stht.HasteMod"
+    "modmenu": [
+      "org.stht.hastemod.client.compat.HasteModMenuIntegration"
     ]
   },
   "mixins": [

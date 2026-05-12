@@ -1,4 +1,4 @@
-package org.stht.client;
+package org.stht.hastemod.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
@@ -9,47 +9,44 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
 import org.lwjgl.glfw.GLFW;
+import org.stht.hastemod.HasteMod;
+import org.stht.hastemod.client.config.HasteConfig;
+import org.stht.hastemod.client.feature.BlockBreaker;
 
 public class HasteModClient implements ClientModInitializer {
+    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
+            Identifier.fromNamespaceAndPath(HasteMod.MOD_ID, "controls"));
+    private static final BlockBreaker BREAKER = new BlockBreaker();
+
     private static KeyMapping useKey;
     private static KeyMapping toggleKey;
     private static KeyMapping toggleBlockSelKey;
-    private static BlockBreaker bbreaker = new BlockBreaker();
-    private static KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("hastemod", "controls"));
 
     @Override
     public void onInitializeClient() {
-        bbreaker = new BlockBreaker();
+        HasteConfig.get();
 
         useKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "Use",
+                "key." + HasteMod.MOD_ID + ".use",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_X,
-                category
-        ));
+                CATEGORY));
 
         toggleKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "Toggle on/off",
+                "key." + HasteMod.MOD_ID + ".toggle",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_U,
-                category
-        ));
+                CATEGORY));
 
         toggleBlockSelKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
-                "Toggle Block Selection Mode on/off",
+                "key." + HasteMod.MOD_ID + ".toggle_block_sel",
                 InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_Y,
-                category
-        ));
+                CATEGORY));
 
-        ClientTickEvents.END_CLIENT_TICK.register((tick) -> bbreaker.onTick(Minecraft.getInstance()));/*
-        ClientTickEvents.START_CLIENT_TICK.register((tick) -> {
-            if (!bbreaker.isBreaking || MinecraftClient.getInstance().player == null) return;
-            bbreaker.isBreaking = false;
-            MinecraftClient.getInstance().interactionManager.cancelBlockBreaking();
-        });*/
+        ClientTickEvents.END_CLIENT_TICK.register(BREAKER::onTick);
 
-        System.out.println("Initialized HasteMod");
+        HasteMod.LOGGER.info("Initialized");
     }
 
     public static KeyMapping getActivateKey() {
@@ -65,7 +62,6 @@ public class HasteModClient implements ClientModInitializer {
     }
 
     public static void onBlockBreak(BlockPos pos) {
-        bbreaker.onBlockBreak(pos, Minecraft.getInstance());
+        BREAKER.onBlockBreak(pos, Minecraft.getInstance());
     }
-
 }
