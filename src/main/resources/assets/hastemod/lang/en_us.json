@@ -1,3 +1,26 @@
 {
-  "key.category.hastemod.controls": "HasteMod"
+  "key.hastemod.use": "Use",
+  "key.hastemod.toggle": "Toggle on/off",
+  "key.hastemod.toggle_block_sel": "Toggle Block Selection Mode on/off",
+
+  "text.hastemod.category.breaking": "Breaking",
+
+  "text.hastemod.group.shape": "Shape",
+  "text.hastemod.group.throttle": "Throttle",
+  "text.hastemod.group.throttle.tooltip": "Limits how many block-break packets are sent per tick. Lower values are gentler on the server and far less likely to trigger anti-cheat kicks.",
+
+  "text.hastemod.option.shape": "Shape",
+  "text.hastemod.option.shape.tooltip": "How the mod picks which blocks to mine around you.\n  Cube   — every block inside the radius cube\n  Sphere — every block within radius distance\n  Layer  — one Y-layer at your feet, within the radius\n  Tunnel — a 3×3 channel in the direction you look",
+  "text.hastemod.option.radius": "Radius",
+  "text.hastemod.option.radius.tooltip": "How far from you the shape extends (in blocks).",
+  "text.hastemod.option.blocks_per_tick": "Blocks per tick",
+  "text.hastemod.option.blocks_per_tick.tooltip": "Maximum number of block-break attempts per game tick.",
+  "text.hastemod.option.tick_delay": "Tick delay between batches",
+  "text.hastemod.option.tick_delay.tooltip": "How many ticks to wait after sending a batch before sending the next one. 20 ticks = 1 second.",
+
+  "msg.hastemod.toggled_on": "§eToggled HasteMod to §aon",
+  "msg.hastemod.toggled_off": "§eToggled HasteMod to §coff",
+  "msg.hastemod.block_sel_toggled_on": "§eToggled §dBlock Selection Mode §eto §aon",
+  "msg.hastemod.block_sel_toggled_off": "§eToggled §dBlock Selection Mode §eto §coff",
+  "msg.hastemod.selected_block": "§eSelected block: §3%s"
 }
