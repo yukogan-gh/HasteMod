@@ -7,16 +7,16 @@
 
   "text.hastemod.group.shape": "Shape",
   "text.hastemod.group.throttle": "Throttle",
-  "text.hastemod.group.throttle.tooltip": "Limits how many block-break packets are sent per tick. Lower values are gentler on the server and far less likely to trigger anti-cheat kicks.",
+  "text.hastemod.group.throttle.tooltip": "Limits how many block-break attempts are made per tick. Lower values are less intensive on both the server and the client, and far less likely to trigger anti-cheats.",
 
   "text.hastemod.option.shape": "Shape",
-  "text.hastemod.option.shape.tooltip": "How the mod picks which blocks to mine around you.\n  Cube   — every block inside the radius cube\n  Sphere — every block within radius distance\n  Layer  — one Y-layer at your feet, within the radius\n  Tunnel — a 3×3 channel in the direction you look",
+  "text.hastemod.option.shape.tooltip": "The mining shape around you.\nCube: every block the radius can reach\nSphere: every block within radius distance\nLayer: one Y-layer at your feet (within the radius).\nTunnel: a 3×3 channel in the direction you look",
   "text.hastemod.option.radius": "Radius",
   "text.hastemod.option.radius.tooltip": "How far from you the shape extends (in blocks).",
   "text.hastemod.option.blocks_per_tick": "Blocks per tick",
   "text.hastemod.option.blocks_per_tick.tooltip": "Maximum number of block-break attempts per game tick.",
-  "text.hastemod.option.tick_delay": "Tick delay between batches",
-  "text.hastemod.option.tick_delay.tooltip": "How many ticks to wait after sending a batch before sending the next one. 20 ticks = 1 second.",
+  "text.hastemod.option.tick_delay": "Tick delay between attempts",
+  "text.hastemod.option.tick_delay.tooltip": "How many ticks to wait after making an attempt before making the next one.",
 
   "msg.hastemod.toggled_on": "§eToggled HasteMod to §aon",
   "msg.hastemod.toggled_off": "§eToggled HasteMod to §coff",
