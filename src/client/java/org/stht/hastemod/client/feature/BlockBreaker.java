@@ -81,15 +81,12 @@ public class BlockBreaker {
 
         float speed = getMineSpeed(client, client.player.getInventory().getSelectedSlot(), state);
         if (speed <= 1.0f) {
-            int slots = client.player.getInventory().getNonEquipmentItems().size();
-            for (int i = 0; i < slots; i++) {
+            for (int i = 0; i < 9; i++) {
                 float newSpeed = getMineSpeed(client, i, state);
                 if (newSpeed > 1.0f) {
-                    if (client.player.getInventory().getSelectedSlot() == i) break;
-                    client.gameMode.handleContainerInput(
-                            client.player.containerMenu.containerId,
-                            36 + client.player.getInventory().getSelectedSlot(),
-                            i, ContainerInput.SWAP, client.player);
+                    if (client.player.getInventory().getSelectedSlot() != i) {
+                        client.player.getInventory().setSelectedSlot(i);
+                    }
                     break;
                 }
             }
@@ -108,25 +105,40 @@ public class BlockBreaker {
         BlockPos p = client.player.blockPosition();
         int r = cfg.radius;
         List<BlockPos> out = new ArrayList<>();
+        
+        java.util.function.Predicate<BlockPos> isValid = pos -> {
+            if (client.level == null) return false;
+            BlockState state = client.level.getBlockState(pos);
+            if (state.isAir()) return false;
+            if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
+            return true;
+        };
+
         switch (cfg.shape) {
             case CUBE -> {
                 for (int x = -r; x <= r; x++)
                     for (int y = 0; y <= r; y++)
-                        for (int z = -r; z <= r; z++)
-                            out.add(p.offset(x, y, z));
+                        for (int z = -r; z <= r; z++) {
+                            BlockPos pos = p.offset(x, y, z);
+                            if (isValid.test(pos)) out.add(pos);
+                        }
             }
             case SPHERE -> {
                 int r2 = r * r;
                 for (int x = -r; x <= r; x++)
                     for (int y = -r; y <= r; y++)
                         for (int z = -r; z <= r; z++)
-                            if (x * x + y * y + z * z <= r2)
-                                out.add(p.offset(x, y, z));
+                            if (x * x + y * y + z * z <= r2) {
+                                BlockPos pos = p.offset(x, y, z);
+                                if (isValid.test(pos)) out.add(pos);
+                            }
             }
             case LAYER -> {
                 for (int x = -r; x <= r; x++)
-                    for (int z = -r; z <= r; z++)
-                        out.add(p.offset(x, 0, z));
+                    for (int z = -r; z <= r; z++) {
+                        BlockPos pos = p.offset(x, 0, z);
+                        if (isValid.test(pos)) out.add(pos);
+                    }
             }
             case TUNNEL -> {
                 Direction facing = client.player.getDirection();
@@ -139,7 +151,8 @@ public class BlockBreaker {
                         for (int dy = 0; dy <= 2; dy++) {
                             int dx = fx * forward + sx * side;
                             int dz = fz * forward + sz * side;
-                            out.add(p.offset(dx, dy, dz));
+                            BlockPos pos = p.offset(dx, dy, dz);
+                            if (isValid.test(pos)) out.add(pos);
                         }
                     }
                 }
