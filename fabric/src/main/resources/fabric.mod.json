@@ -29,7 +29,9 @@
     "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
     "minecraft": "~${minecraft_version}",
-    "java": ">=25",
+    "java": ">=25"
+  },
+  "suggests": {
     "yet_another_config_lib_v3": ">=3.0.0"
   }
 }

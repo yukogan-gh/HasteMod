@@ -22,4 +22,9 @@ public class FabricPlatformHelper implements IPlatformHelper {
     public void registerClientTickEvent(Runnable onTick) {
         ClientTickEvents.END_CLIENT_TICK.register(client -> onTick.run());
     }
+
+    @Override
+    public boolean isModLoaded(String modId) {
+        return FabricLoader.getInstance().isModLoaded(modId);
+    }
 }

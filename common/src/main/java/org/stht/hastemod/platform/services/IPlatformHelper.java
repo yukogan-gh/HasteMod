@@ -9,4 +9,8 @@ public interface IPlatformHelper {
     void registerKeyMapping(KeyMapping keyMapping);
 
     void registerClientTickEvent(Runnable onTick);
+
+    default boolean isModLoaded(String modId) {
+        return false;
+    }
 }
