@@ -8,7 +8,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
-import org.lwjgl.glfw.GLFW;
 import org.stht.hastemod.HasteMod;
 import org.stht.hastemod.client.config.HasteConfig;
 import org.stht.hastemod.client.feature.BlockBreaker;
@@ -28,20 +27,17 @@ public class HasteModClient implements ClientModInitializer {
 
         useKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key." + HasteMod.MOD_ID + ".use",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_X,
+                InputConstants.getKey("key.keyboard.x").getValue(),
                 CATEGORY));
 
         toggleKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key." + HasteMod.MOD_ID + ".toggle",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_U,
+                InputConstants.getKey("key.keyboard.u").getValue(),
                 CATEGORY));
 
         toggleBlockSelKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key." + HasteMod.MOD_ID + ".toggle_block_sel",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_Y,
+                InputConstants.getKey("key.keyboard.y").getValue(),
                 CATEGORY));
 
         ClientTickEvents.END_CLIENT_TICK.register(BREAKER::onTick);
