@@ -1,6 +1,7 @@
 package org.stht.hastemod.neoforge;
 
 import net.minecraft.client.KeyMapping;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.loading.FMLPaths;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -29,5 +30,10 @@ public class NeoForgePlatformHelper implements IPlatformHelper {
     @Override
     public void registerClientTickEvent(Runnable onTick) {
         TICK_EVENTS.add(onTick);
+    }
+
+    @Override
+    public boolean isModLoaded(String modId) {
+        return ModList.get().isLoaded(modId);
     }
 }
