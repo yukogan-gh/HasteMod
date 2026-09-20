@@ -1,7 +1,5 @@
 package org.stht.hastemod.client.feature;
 
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,7 +15,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
-@Environment(EnvType.CLIENT)
 public class BlockBreaker {
     private static final Direction DEFAULT_FACE = Direction.UP;
 

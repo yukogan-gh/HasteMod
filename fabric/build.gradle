@@ -16,3 +16,21 @@ dependencies {
 
     implementation project(":common")
 }
+
+processResources {
+    def expandProps = [
+        "version": project.version,
+        "loader_version": rootProject.loader_version,
+        "minecraft_version": rootProject.minecraft_version
+    ]
+    inputs.properties expandProps
+
+    filesMatching("fabric.mod.json") {
+        expand expandProps
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    from project(":common").sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}

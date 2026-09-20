@@ -2,16 +2,12 @@ package org.stht.hastemod.client.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import net.fabricmc.api.EnvType;
-import net.fabricmc.api.Environment;
-import net.fabricmc.loader.api.FabricLoader;
 import org.stht.hastemod.HasteMod;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-@Environment(EnvType.CLIENT)
 public class HasteConfig {
     public enum Shape {
         CUBE,

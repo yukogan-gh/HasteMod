@@ -1,4 +1,4 @@
-package org.stht.hastemod.client.compat;
+package org.stht.hastemod.fabric.compat;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
