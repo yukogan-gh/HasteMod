@@ -1,10 +1,18 @@
 plugins {
     id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT' apply false
+    id 'net.neoforged.moddev' version "${neoforge_moddev_version}" apply false
 }
 
 subprojects {
     apply plugin: 'java'
-    
+
+    version = rootProject.mod_version
+    group = rootProject.maven_group
+
+    base {
+        archivesName = "${rootProject.archives_base_name}-${project.name}"
+    }
+
     java {
         sourceCompatibility = JavaVersion.VERSION_25
         targetCompatibility = JavaVersion.VERSION_25

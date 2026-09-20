@@ -4,14 +4,28 @@ license="MIT"
 
 [[mods]]
 modId="hastemod"
-version="${file.jarVersion}"
+version="${version}"
 displayName="HasteMod"
 description='''
-A client-side mod that breaks multiple blocks.
+A client-side mod that abuses the instamine feature to very quickly mine set types of blocks.
 '''
 
 [[mixins]]
 config="hastemod.mixins.json"
+
+[[dependencies.hastemod]]
+modId="neoforge"
+type="required"
+versionRange="[${neoforge_version},)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.hastemod]]
+modId="minecraft"
+type="required"
+versionRange="[${minecraft_version},26.2)"
+ordering="NONE"
+side="BOTH"
 
 [[dependencies.hastemod]]
 modId="yet_another_config_lib_v3"
