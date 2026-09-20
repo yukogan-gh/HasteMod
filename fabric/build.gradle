@@ -1,0 +1,18 @@
+plugins {
+    id 'net.fabricmc.fabric-loom'
+}
+
+loom {
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+
+    implementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+
+    implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}"
+    implementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    implementation project(":common")
+}

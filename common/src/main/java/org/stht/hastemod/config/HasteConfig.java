@@ -21,7 +21,7 @@ public class HasteConfig {
     }
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
-    private static final Path CONFIG_PATH = FabricLoader.getInstance().getConfigDir().resolve(HasteMod.MOD_ID + ".json");
+    private static final Path CONFIG_PATH = org.stht.hastemod.platform.Services.PLATFORM.getConfigDir().resolve(HasteMod.MOD_ID + ".json");
 
     private static HasteConfig instance;
 

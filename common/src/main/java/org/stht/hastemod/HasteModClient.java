@@ -1,9 +1,7 @@
 package org.stht.hastemod.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -12,7 +10,7 @@ import org.stht.hastemod.HasteMod;
 import org.stht.hastemod.client.config.HasteConfig;
 import org.stht.hastemod.client.feature.BlockBreaker;
 
-public class HasteModClient implements ClientModInitializer {
+public class HasteModClient {
     private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
             Identifier.fromNamespaceAndPath(HasteMod.MOD_ID, "controls"));
     private static final BlockBreaker BREAKER = new BlockBreaker();
@@ -21,26 +19,29 @@ public class HasteModClient implements ClientModInitializer {
     private static KeyMapping toggleKey;
     private static KeyMapping toggleBlockSelKey;
 
-    @Override
+    
     public void onInitializeClient() {
         HasteConfig.get();
 
-        useKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+        useKey = new KeyMapping(
                 "key." + HasteMod.MOD_ID + ".use",
                 InputConstants.getKey("key.keyboard.x").getValue(),
-                CATEGORY));
+                CATEGORY);
+        org.stht.hastemod.platform.Services.PLATFORM.registerKeyMapping(useKey);
 
-        toggleKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+        toggleKey = new KeyMapping(
                 "key." + HasteMod.MOD_ID + ".toggle",
                 InputConstants.getKey("key.keyboard.u").getValue(),
-                CATEGORY));
+                CATEGORY);
+        org.stht.hastemod.platform.Services.PLATFORM.registerKeyMapping(toggleKey);
 
-        toggleBlockSelKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+        toggleBlockSelKey = new KeyMapping(
                 "key." + HasteMod.MOD_ID + ".toggle_block_sel",
                 InputConstants.getKey("key.keyboard.y").getValue(),
-                CATEGORY));
+                CATEGORY);
+        org.stht.hastemod.platform.Services.PLATFORM.registerKeyMapping(toggleBlockSelKey);
 
-        ClientTickEvents.END_CLIENT_TICK.register(BREAKER::onTick);
+        org.stht.hastemod.platform.Services.PLATFORM.registerClientTickEvent(() -> BREAKER.onTick(Minecraft.getInstance()));
 
         HasteMod.LOGGER.info("Initialized");
     }

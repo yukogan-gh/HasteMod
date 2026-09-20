@@ -1,0 +1,21 @@
+modLoader="javafml"
+loaderVersion="[2,)"
+license="MIT"
+
+[[mods]]
+modId="hastemod"
+version="${file.jarVersion}"
+displayName="HasteMod"
+description='''
+A client-side mod that breaks multiple blocks.
+'''
+
+[[mixins]]
+config="hastemod.mixins.json"
+
+[[dependencies.hastemod]]
+modId="yet_another_config_lib_v3"
+type="required"
+versionRange="[3.0.0,)"
+ordering="NONE"
+side="CLIENT"

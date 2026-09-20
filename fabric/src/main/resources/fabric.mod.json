@@ -16,10 +16,10 @@
   "environment": "client",
   "entrypoints": {
     "client": [
-      "org.stht.hastemod.client.HasteModClient"
+      "org.stht.hastemod.fabric.FabricHasteModClient"
     ],
     "modmenu": [
-      "org.stht.hastemod.client.compat.HasteModMenuIntegration"
+      "org.stht.hastemod.fabric.compat.HasteModMenuIntegration"
     ]
   },
   "mixins": [
@@ -29,6 +29,7 @@
     "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
     "minecraft": "~${minecraft_version}",
-    "java": ">=25"
+    "java": ">=25",
+    "yet_another_config_lib_v3": ">=3.0.0"
   }
 }
