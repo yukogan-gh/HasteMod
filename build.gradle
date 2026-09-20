@@ -39,7 +39,7 @@ tasks.register('build26_1', Exec) {
         '-Pneoforge_version=26.1.2.109',
         '-Pyacl_version=3.9.6+26.1-fabric',
         '-Pyacl_neoforge_version=3.9.6+26.1-neoforge',
-        '-Pmod_version=0.2.0-26.1'
+        '-Pmod_version=0.3.0-26.1'
 }
 
 tasks.register('build26_2', Exec) {
@@ -51,7 +51,7 @@ tasks.register('build26_2', Exec) {
         '-Pneoforge_version=26.2.0.88',
         '-Pyacl_version=3.9.6+26.2-fabric',
         '-Pyacl_neoforge_version=3.9.6+26.2-neoforge',
-        '-Pmod_version=0.2.0-26.2'
+        '-Pmod_version=0.3.0-26.2'
 }
 
 tasks.register('build26_3', Exec) {
@@ -63,7 +63,7 @@ tasks.register('build26_3', Exec) {
         '-Pneoforge_version=26.3.0.7-beta',
         '-Pyacl_version=3.9.7+26.3-fabric',
         '-Pyacl_neoforge_version=3.9.7+26.3-neoforge',
-        '-Pmod_version=0.2.0-26.3'
+        '-Pmod_version=0.3.0-26.3'
 }
 
 tasks.register('buildAll') {
