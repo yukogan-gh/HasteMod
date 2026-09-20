@@ -15,7 +15,7 @@ import org.stht.hastemod.HasteMod;
 import org.stht.hastemod.client.HasteModClient;
 import org.stht.hastemod.client.config.HasteConfigScreen;
 
-@Mod(HasteMod.MOD_ID)
+@Mod(value = HasteMod.MOD_ID, dist = Dist.CLIENT)
 public class HasteModNeoForge {
     public HasteModNeoForge(IEventBus modEventBus, ModContainer modContainer) {
         if (FMLEnvironment.getDist().isClient()) {
