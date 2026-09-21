@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "hastemod",
+  "version": "${version}",
+  "name": "HasteMod",
+  "description": "A client-side mod that abuses the instamine feature to very quickly mine set types of blocks.",
+  "authors": [
+    "Yukogan"
+  ],
+  "contact": {
+    "website": "https://www.stht.org/",
+    "repo": "https://github.com/YukoganDev/HasteMod"
+  },
+  "license": "MIT",
+  "icon": "assets/hastemod/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "org.stht.hastemod.fabric.FabricHasteModClient"
+    ],
+    "modmenu": [
+      "org.stht.hastemod.fabric.compat.HasteModMenuIntegration"
+    ]
+  },
+  "mixins": [
+    "hastemod.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
+    "minecraft": "~${minecraft_version}",
+    "java": ">=25"
+  },
+  "suggests": {
+    "yet_another_config_lib_v3": ">=3.0.0"
+  }
+}

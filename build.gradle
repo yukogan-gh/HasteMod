@@ -1,97 +1,79 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version "${loom_version}"
-    id 'maven-publish'
+    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT' apply false
+    id 'net.neoforged.moddev' version "${neoforge_moddev_version}" apply false
 }
 
-version = project.mod_version
-group = project.maven_group
+subprojects {
+    apply plugin: 'java'
 
-repositories {
-    maven {
-        name = "Xander Maven"
-        url = "https://maven.isxander.dev/releases"
-    }
-    maven {
-        name = "Terraformers"
-        url = "https://maven.terraformersmc.com/"
-    }
-}
+    version = rootProject.mod_version
+    group = rootProject.maven_group
 
-loom {
-    splitEnvironmentSourceSets()
-
-    mods {
-        "modid" {
-            sourceSet sourceSets.main
-            sourceSet sourceSets.client
-        }
+    base {
+        archivesName = "${rootProject.archives_base_name}-${project.name}"
     }
 
-}
-
-dependencies {
-    // To change the versions see the gradle.properties file
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${project.loader_version}"
-
-    // Fabric API. This is technically optional, but you probably want it anyway.
-    implementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
-
-    implementation "dev.isxander:yet-another-config-lib:${project.yacl_version}"
-    implementation "com.terraformersmc:modmenu:${project.modmenu_version}"
-}
-
-processResources {
-    def version = project.version
-    inputs.property "version", version
-    inputs.property "loader_version", loader_version
-    inputs.property "minecraft_version", minecraft_version
-
-    filesMatching("fabric.mod.json") {
-        expand(
-                "version": version,
-                "loader_version": loader_version,
-                "minecraft_version": minecraft_version
-        )
-    }
-}
-
-tasks.withType(JavaCompile).configureEach {
-    it.options.release = 25
-}
-
-java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
-    // if it is present.
-    // If you remove this line, sources will not be generated.
-    withSourcesJar()
-
-    sourceCompatibility = JavaVersion.VERSION_25
-    targetCompatibility = JavaVersion.VERSION_25
-}
-
-jar {
-    def projectName = project.name
-    inputs.property "projectName", projectName
-
-    from("LICENSE") {
-        rename { "${it}_$projectName"}
-    }
-}
-
-// configure the maven publication
-publishing {
-    publications {
-        create("mavenJava", MavenPublication) {
-            from components.java
-        }
+    java {
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
-    // See https://docs.gradle.org/current/userguide/publishing_maven.html for information on how to set up publishing.
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release = 25
+    }
+
     repositories {
-        // Add repositories to publish to here.
-        // Notice: This block does NOT have the same function as the block in the top level.
-        // The repositories here will be used for publishing your artifact, not for
-        // retrieving dependencies.
+        mavenCentral()
+        maven { url = "https://maven.isxander.dev/releases" }
+        maven { url = "https://maven.terraformersmc.com/" }
+        maven { url = "https://maven.neoforged.net/releases" }
     }
+}
+
+tasks.register('build26_1', Exec) {
+    description = 'Builds Fabric and NeoForge jars for Minecraft 26.1'
+    group = 'build'
+    commandLine './gradlew', 'build',
+        '-Pminecraft_version=26.1',
+        '-Pminecraft_version_range=[26.1,26.2)',
+        '-Pneoforge_version_range=[26.1,)',
+        '-Pfabric_api_version=0.144.4+26.1',
+        '-Pneoforge_version=26.1.2.109',
+        '-Pyacl_version=3.9.6+26.1-fabric',
+        '-Pyacl_neoforge_version=3.9.6+26.1-neoforge',
+        '-Pmod_version=0.3.0-26.1'
+}
+
+tasks.register('build26_2', Exec) {
+    description = 'Builds Fabric and NeoForge jars for Minecraft 26.2'
+    group = 'build'
+    commandLine './gradlew', 'build',
+        '-Pminecraft_version=26.2',
+        '-Pminecraft_version_range=[26.2,26.3)',
+        '-Pneoforge_version_range=[26.2,)',
+        '-Pfabric_api_version=0.158.0+26.2',
+        '-Pneoforge_version=26.2.0.88',
+        '-Pyacl_version=3.9.6+26.2-fabric',
+        '-Pyacl_neoforge_version=3.9.6+26.2-neoforge',
+        '-Pmod_version=0.3.0-26.2'
+}
+
+tasks.register('build26_3', Exec) {
+    description = 'Builds Fabric and NeoForge jars for Minecraft 26.3'
+    group = 'build'
+    commandLine './gradlew', 'build',
+        '-Pminecraft_version=26.3',
+        '-Pminecraft_version_range=[26.3,26.4)',
+        '-Pneoforge_version_range=[26.3,)',
+        '-Pfabric_api_version=0.161.0+26.3',
+        '-Pneoforge_version=26.3.0.7-beta',
+        '-Pyacl_version=3.9.7+26.3-fabric',
+        '-Pyacl_neoforge_version=3.9.7+26.3-neoforge',
+        '-Pmod_version=0.3.0-26.3'
+}
+
+tasks.register('buildAll') {
+    description = 'Builds Fabric and NeoForge jars for all supported 26.x versions (26.1, 26.2, 26.3)'
+    group = 'build'
+    dependsOn 'build26_1', 'build26_2', 'build26_3'
 }

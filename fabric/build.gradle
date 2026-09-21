@@ -1,0 +1,36 @@
+plugins {
+    id 'net.fabricmc.fabric-loom'
+}
+
+loom {
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+
+    implementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+    implementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+
+    implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}"
+    implementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+
+    implementation project(":common")
+}
+
+processResources {
+    def expandProps = [
+        "version": project.version,
+        "loader_version": rootProject.loader_version,
+        "minecraft_version": rootProject.minecraft_version
+    ]
+    inputs.properties expandProps
+
+    filesMatching("fabric.mod.json") {
+        expand expandProps
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    from project(":common").sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}

@@ -1,0 +1,48 @@
+plugins {
+    id 'net.neoforged.moddev'
+}
+
+neoForge {
+    version = rootProject.neoforge_version
+
+    validateAccessTransformers = true
+
+    runs {
+        client {
+            client()
+        }
+        server {
+            server()
+        }
+    }
+
+    mods {
+        "hastemod" {
+            sourceSet sourceSets.main
+            sourceSet project(":common").sourceSets.main
+        }
+    }
+}
+
+dependencies {
+    implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_neoforge_version}"
+    compileOnly project(":common")
+}
+
+processResources {
+    def expandProps = [
+        "version": project.version,
+        "neoforge_version_range": project.findProperty("neoforge_version_range") ?: "[${rootProject.minecraft_version},)",
+        "minecraft_version_range": project.findProperty("minecraft_version_range") ?: "[${rootProject.minecraft_version},)"
+    ]
+    inputs.properties expandProps
+
+    filesMatching("META-INF/neoforge.mods.toml") {
+        expand expandProps
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    from project(":common").sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
