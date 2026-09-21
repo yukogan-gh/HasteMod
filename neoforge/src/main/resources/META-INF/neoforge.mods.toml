@@ -22,14 +22,14 @@ config="hastemod.mixins.json"
 [[dependencies.hastemod]]
 modId="neoforge"
 type="required"
-versionRange="[${neoforge_version},)"
+versionRange="${neoforge_version_range}"
 ordering="NONE"
 side="BOTH"
 
 [[dependencies.hastemod]]
 modId="minecraft"
 type="required"
-versionRange="[${minecraft_version},26.2)"
+versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
 

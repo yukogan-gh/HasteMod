@@ -32,8 +32,8 @@ dependencies {
 processResources {
     def expandProps = [
         "version": project.version,
-        "neoforge_version": rootProject.neoforge_version,
-        "minecraft_version": rootProject.minecraft_version
+        "neoforge_version_range": project.findProperty("neoforge_version_range") ?: "[${rootProject.minecraft_version},)",
+        "minecraft_version_range": project.findProperty("minecraft_version_range") ?: "[${rootProject.minecraft_version},)"
     ]
     inputs.properties expandProps
 
