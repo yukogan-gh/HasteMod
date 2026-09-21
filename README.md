@@ -1,10 +1,12 @@
 # HasteMod
-A client-side Fabric mod that abuses the instamine feature to quickly mine surrounding blocks.
+A client-side mod that abuses the instamine feature to quickly mine surrounding blocks.
 
 ## Requirements
-* **[Fabric API](https://modrinth.com/mod/fabric-api)** (Required)
+* **[Fabric API](https://modrinth.com/mod/fabric-api)** (Required, fabric only)
+
+## Optional
 * **[YetAnotherConfigLib (YACL)](https://modrinth.com/mod/yacl)** (Optional, for in-game config GUI)
-* **[Mod Menu](https://modrinth.com/mod/modmenu)** (Optional, to access the config screen)
+* **[Mod Menu](https://modrinth.com/mod/modmenu)** (Optional, to access the config screen, fabric only)
 
 ## Default Controls
 * `U`: Toggle mod on / off
