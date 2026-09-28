@@ -1,4 +1,7 @@
 {
+  "key.category.hastemod.controls": "HasteMod",
+  "key.category.hastemod": "HasteMod",
+  "key.categories.hastemod": "HasteMod",
   "key.hastemod.use": "Use",
   "key.hastemod.toggle": "Toggle on/off",
   "key.hastemod.toggle_block_sel": "Toggle Block Selection Mode on/off",
