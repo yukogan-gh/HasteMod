@@ -4,7 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.stht.hastemod.client.HasteModClient;
@@ -49,6 +49,10 @@ public class BlockBreaker {
             return;
         }
 
+        if (client.gameMode != null && client.gameMode.isDestroying()) {
+            client.gameMode.stopDestroyBlock();
+        }
+
         HasteConfig cfg = HasteConfig.get();
         List<BlockPos> targets = collectTargets(client, cfg);
         int broken = 0;
@@ -76,25 +80,52 @@ public class BlockBreaker {
         if (state.isAir()) return false;
         if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
 
-        float speed = getMineSpeed(client, client.player.getInventory().getSelectedSlot(), state);
-        if (speed <= 1.0f) {
+        int currentSlot = client.player.getInventory().getSelectedSlot();
+        int targetSlot = -1;
+
+        if (getDestroyProgress(client, currentSlot, state, blockPos) >= 1.0F) {
+            targetSlot = currentSlot;
+        } else {
             for (int i = 0; i < 9; i++) {
-                float newSpeed = getMineSpeed(client, i, state);
-                if (newSpeed > 1.0f) {
-                    if (client.player.getInventory().getSelectedSlot() != i) {
-                        client.player.getInventory().setSelectedSlot(i);
-                    }
+                if (i == currentSlot) continue;
+                if (getDestroyProgress(client, i, state, blockPos) >= 1.0F) {
+                    targetSlot = i;
                     break;
                 }
             }
         }
+
+        if (targetSlot == -1) {
+            return false;
+        }
+
+        if (client.player.getInventory().getSelectedSlot() != targetSlot) {
+            client.player.getInventory().setSelectedSlot(targetSlot);
+            if (client.getConnection() != null) {
+                client.getConnection().send(new ServerboundSetCarriedItemPacket(targetSlot));
+            }
+        }
+
         client.gameMode.startDestroyBlock(blockPos, DEFAULT_FACE);
         return true;
     }
 
-    private float getMineSpeed(Minecraft client, int slot, BlockState state) {
-        if (client.player == null) return 1.0f;
-        return client.player.getInventory().getNonEquipmentItems().get(slot).getDestroySpeed(state);
+    // progress >= 1f --> instamine
+    private float getDestroyProgress(Minecraft client, int slot, BlockState state, BlockPos pos) {
+        if (client.player == null || client.level == null) return 0.0f;
+        if (client.player.getAbilities().instabuild) {
+            return state.getDestroySpeed(client.level, pos) < 0.0f ? 0.0f : 1.0f;
+        }
+        int currentSlot = client.player.getInventory().getSelectedSlot();
+        if (currentSlot == slot) {
+            return state.getDestroyProgress(client.player, client.level, pos);
+        }
+        client.player.getInventory().setSelectedSlot(slot);
+        try {
+            return state.getDestroyProgress(client.player, client.level, pos);
+        } finally {
+            client.player.getInventory().setSelectedSlot(currentSlot);
+        }
     }
 
     private List<BlockPos> collectTargets(Minecraft client, HasteConfig cfg) {
@@ -108,6 +139,7 @@ public class BlockBreaker {
             BlockState state = client.level.getBlockState(pos);
             if (state.isAir()) return false;
             if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
+            if (!client.player.isWithinBlockInteractionRange(pos, 0.0)) return false;
             return true;
         };
 
