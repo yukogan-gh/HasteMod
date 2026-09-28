@@ -28,6 +28,8 @@ processResources {
     filesMatching("fabric.mod.json") {
         expand expandProps
     }
+
+    from project(":common").sourceSets.main.resources
 }
 
 tasks.named('jar', Jar).configure {
