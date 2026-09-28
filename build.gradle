@@ -2,6 +2,15 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT' apply false
     id 'net.neoforged.moddev' version "${neoforge_moddev_version}" apply false
 }
+def targetMc = findProperty("mc") ?: "26.1"
+def versionFile = file("versions/${targetMc}.properties")
+if (versionFile.exists()) {
+    def props = new Properties()
+    versionFile.withInputStream { props.load(it) }
+    props.each { key, val ->
+        project.ext.set(key.toString(), val.toString())
+    }
+}
 
 subprojects {
     apply plugin: 'java'
@@ -33,43 +42,19 @@ subprojects {
 tasks.register('build26_1', Exec) {
     description = 'Builds Fabric and NeoForge jars for Minecraft 26.1'
     group = 'build'
-    commandLine './gradlew', 'build',
-        '-Pminecraft_version=26.1',
-        '-Pminecraft_version_range=[26.1,26.2)',
-        '-Pneoforge_version_range=[26.1,)',
-        '-Pfabric_api_version=0.144.4+26.1',
-        '-Pneoforge_version=26.1.2.109',
-        '-Pyacl_version=3.9.6+26.1-fabric',
-        '-Pyacl_neoforge_version=3.9.6+26.1-neoforge',
-        '-Pmod_version=0.3.0-26.1'
+    commandLine './gradlew', 'build', '-Pmc=26.1'
 }
 
 tasks.register('build26_2', Exec) {
     description = 'Builds Fabric and NeoForge jars for Minecraft 26.2'
     group = 'build'
-    commandLine './gradlew', 'build',
-        '-Pminecraft_version=26.2',
-        '-Pminecraft_version_range=[26.2,26.3)',
-        '-Pneoforge_version_range=[26.2,)',
-        '-Pfabric_api_version=0.158.0+26.2',
-        '-Pneoforge_version=26.2.0.88',
-        '-Pyacl_version=3.9.6+26.2-fabric',
-        '-Pyacl_neoforge_version=3.9.6+26.2-neoforge',
-        '-Pmod_version=0.3.0-26.2'
+    commandLine './gradlew', 'build', '-Pmc=26.2'
 }
 
 tasks.register('build26_3', Exec) {
     description = 'Builds Fabric and NeoForge jars for Minecraft 26.3'
     group = 'build'
-    commandLine './gradlew', 'build',
-        '-Pminecraft_version=26.3',
-        '-Pminecraft_version_range=[26.3,26.4)',
-        '-Pneoforge_version_range=[26.3,)',
-        '-Pfabric_api_version=0.161.0+26.3',
-        '-Pneoforge_version=26.3.0.7-beta',
-        '-Pyacl_version=3.9.7+26.3-fabric',
-        '-Pyacl_neoforge_version=3.9.7+26.3-neoforge',
-        '-Pmod_version=0.3.0-26.3'
+    commandLine './gradlew', 'build', '-Pmc=26.3'
 }
 
 tasks.register('buildAll') {
