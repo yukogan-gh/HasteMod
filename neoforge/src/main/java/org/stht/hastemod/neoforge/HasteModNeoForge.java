@@ -5,9 +5,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.ModList;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
@@ -19,6 +19,8 @@ import org.stht.hastemod.client.config.HasteConfigScreen;
 public class HasteModNeoForge {
     public HasteModNeoForge(IEventBus modEventBus, ModContainer modContainer) {
         if (FMLEnvironment.getDist().isClient()) {
+            modEventBus.addListener(ClientEvents::onKeyRegister);
+            NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
             if (ModList.get().isLoaded("yet_another_config_lib_v3")) {
                 NeoForgeYaclCompat.registerConfigScreen(modContainer);
             }
@@ -34,9 +36,7 @@ public class HasteModNeoForge {
         }
     }
 
-    @EventBusSubscriber(modid = HasteMod.MOD_ID, value = Dist.CLIENT)
     public static class ClientEvents {
-        @SubscribeEvent
         public static void onKeyRegister(RegisterKeyMappingsEvent event) {
             new HasteModClient().onInitializeClient();
 
@@ -45,7 +45,6 @@ public class HasteModNeoForge {
             }
         }
 
-        @SubscribeEvent
         public static void onClientTick(ClientTickEvent.Post event) {
             for (var tickEvent : NeoForgePlatformHelper.TICK_EVENTS) {
                 tickEvent.run();
