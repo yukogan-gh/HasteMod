@@ -3,6 +3,15 @@ plugins {
 }
 
 loom {
+    runs {
+        clientGameTest {
+            client()
+            name "Client Game Test"
+            vmArg "-Dfabric.client.gametest"
+            runDir "run-client-gametest"
+            source sourceSets.test
+        }
+    }
 }
 
 dependencies {
@@ -35,4 +44,8 @@ processResources {
 tasks.named('jar', Jar).configure {
     from project(":common").sourceSets.main.output
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
 }
