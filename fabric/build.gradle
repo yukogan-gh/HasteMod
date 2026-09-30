@@ -2,13 +2,21 @@ plugins {
     id 'net.fabricmc.fabric-loom'
 }
 
+sourceSets {
+    main {
+        resources {
+            srcDir project(":common").sourceSets.main.resources
+        }
+    }
+}
+
 loom {
     runs {
         clientGameTest {
             client()
             name "Client Game Test"
             vmArg "-Dfabric.client.gametest"
-            runDir "run-client-gametest"
+            runDir "run-gametest-${rootProject.minecraft_version}"
             source sourceSets.test
         }
     }
@@ -21,29 +29,31 @@ dependencies {
     implementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
 
     implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}"
-    implementation "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    compileOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    if (!rootProject.minecraft_version.contains("-")) {
+        runtimeOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    }
 
     implementation project(":common")
 }
 
 processResources {
+    def mcVersion = rootProject.minecraft_version
+    def expandMcVersion = mcVersion.contains('-') ? "${mcVersion.split('-')[0]}-" : mcVersion
     def expandProps = [
         "version": project.version,
         "loader_version": rootProject.loader_version,
-        "minecraft_version": rootProject.minecraft_version
+        "minecraft_version": expandMcVersion
     ]
     inputs.properties expandProps
 
     filesMatching("fabric.mod.json") {
         expand expandProps
     }
-
-    from project(":common").sourceSets.main.resources
 }
 
 tasks.named('jar', Jar).configure {
     from project(":common").sourceSets.main.output
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.withType(Test).configureEach {
