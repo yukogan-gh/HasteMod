@@ -1,62 +1,8 @@
 plugins {
-    id 'net.fabricmc.fabric-loom' version '1.17-SNAPSHOT' apply false
-    id 'net.neoforged.moddev' version "${neoforge_moddev_version}" apply false
+    id 'net.fabricmc.fabric-loom-remap' version '1.17-SNAPSHOT' apply false
 }
 
-tasks.register('gameTestAll') {
-    description = 'GameTest across all Minecraft versions'
-    group = 'verification'
-
-    doLast {
-        def versionsToTest = ['26.1', '26.2', '26.3']
-        println "\n=============================================="
-        println "      RUNNING GAMETESTS (BLOCK BREAKING)"
-        println "=============================================="
-
-        versionsToTest.each { mcVer ->
-            println "\n>>> Running GameTest on Minecraft ${mcVer}..."
-            long startTime = System.currentTimeMillis()
-
-            def cmd = ['./gradlew', ':fabric:runClientGameTest', "-Pmc=${mcVer}".toString(), '--no-daemon'] as String[]
-            def pb = new ProcessBuilder(cmd)
-            pb.directory(project.rootDir)
-            pb.redirectErrorStream(true)
-
-            def proc = pb.start()
-            def reader = new BufferedReader(new InputStreamReader(proc.inputStream))
-
-            boolean passed = false
-            String failureReason = null
-            String line
-
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("[GameTest]")) {
-                    println "   ${line.substring(line.indexOf('[GameTest]'))}"
-                }
-                if (line.contains("SUCCESS:") || line.contains("PASSED")) {
-                    passed = true
-                }
-                if (line.contains("AssertionError:") || line.contains("BUILD FAILED")) {
-                    failureReason = line
-                }
-            }
-
-            proc.waitFor()
-
-            long elapsed = (System.currentTimeMillis() - startTime) / 1000
-            if (passed && proc.exitValue() == 0) {
-                println "✔ [PASSED] Minecraft ${mcVer} GameTest passed in ${elapsed}s!"
-            } else {
-                throw new GradleException("✘ [FAILED] Minecraft ${mcVer} GameTest failed (${failureReason ?: 'exit code ' + proc.exitValue()})")
-            }
-        }
-
-        println "\n=============================================="
-        println "      ALL GAMETESTS PASSED SUCCESSFULLY"
-        println "==============================================\n"
-    }
-}
-def targetMc = findProperty("mc") ?: "26.1"
+def targetMc = findProperty("mc") ?: "1.20.1"
 def versionFile = file("versions/${targetMc}.properties")
 if (versionFile.exists()) {
     def props = new Properties()
@@ -77,106 +23,17 @@ subprojects {
     }
 
     java {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 25
+        it.options.release = 17
     }
 
     repositories {
         mavenCentral()
         maven { url = "https://maven.isxander.dev/releases" }
         maven { url = "https://maven.terraformersmc.com/" }
-        maven { url = "https://maven.neoforged.net/releases" }
-    }
-}
-
-tasks.register('build26_1', Exec) {
-    description = 'Builds Fabric and NeoForge jars for Minecraft 26.1'
-    group = 'build'
-    commandLine './gradlew', 'build', '-Pmc=26.1'
-}
-
-tasks.register('build26_2', Exec) {
-    description = 'Builds Fabric and NeoForge jars for Minecraft 26.2'
-    group = 'build'
-    commandLine './gradlew', 'build', '-Pmc=26.2'
-}
-
-tasks.register('build26_3', Exec) {
-    description = 'Builds Fabric and NeoForge jars for Minecraft 26.3'
-    group = 'build'
-    commandLine './gradlew', 'build', '-Pmc=26.3'
-}
-
-tasks.register('buildAll') {
-    description = 'Builds Fabric and NeoForge jars for all supported 26.x versions (26.1, 26.2, 26.3)'
-    group = 'build'
-    dependsOn 'build26_1', 'build26_2', 'build26_3'
-}
-
-tasks.register('smokeTest') {
-    description = 'Automated client smoke test: boots each version, confirms clean initialization & audio engine, then shuts down.'
-    group = 'verification'
-    dependsOn 'buildAll'
-
-    doLast {
-        def versionsToTest = ['26.1', '26.2', '26.3']
-        println "\n=============================================="
-        println "  RUNNING AUTOMATED CLIENT SMOKE TESTS"
-        println "=============================================="
-
-        versionsToTest.each { mcVer ->
-            println "\n>>> Testing Minecraft ${mcVer} (Fabric)..."
-            long startTime = System.currentTimeMillis()
-
-            def cmd = ['./gradlew', ':fabric:runClient', "-Pmc=${mcVer}".toString(), '--no-daemon'] as String[]
-            def pb = new ProcessBuilder(cmd)
-            pb.directory(project.rootDir)
-            pb.redirectErrorStream(true)
-
-            def proc = pb.start()
-            def reader = new BufferedReader(new InputStreamReader(proc.inputStream))
-
-            boolean passed = false
-            String failureReason = null
-            String line
-
-            while ((line = reader.readLine()) != null) {
-                if (line.contains("MixinApplyError") ||
-                    line.contains("Incompatible mod set") ||
-                    line.contains("NoSuchMethodError") ||
-                    line.contains("ClassNotFoundException") ||
-                    line.contains("Exception in thread \"main\"")) {
-                    failureReason = line
-                    break
-                }
-                if (line.contains("Sound engine started") || line.contains("OpenAL initialized")) {
-                    passed = true
-                    break
-                }
-            }
-
-            if (!passed && failureReason == null) {
-                failureReason = "Process terminated before reaching title screen."
-            }
-
-            proc.toHandle().descendants().forEach { h -> h.destroyForcibly() }
-            proc.destroyForcibly()
-            proc.waitFor()
-
-            long elapsed = (System.currentTimeMillis() - startTime) / 1000
-            if (passed) {
-                println "✔ [PASSED] Minecraft ${mcVer} loaded cleanly in ${elapsed}s (Mixins applied, mod loaded, title screen reached)!"
-            } else {
-                throw new GradleException("✘ [FAILED] Minecraft ${mcVer} smoke test failed: ${failureReason}")
-            }
-        }
-
-        println "\n=============================================="
-        println "  ALL VERSIONS PASSED SMOKE TESTS SUCCESSFULLY"
-        println "==============================================\n"
     }
 }

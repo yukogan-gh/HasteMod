@@ -1,5 +1,5 @@
 plugins {
-    id 'net.fabricmc.fabric-loom'
+    id 'net.fabricmc.fabric-loom-remap'
 }
 
 sourceSets {
@@ -24,26 +24,30 @@ loom {
 
 dependencies {
     minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+    mappings loom.officialMojangMappings()
 
-    implementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
+    modImplementation "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${rootProject.fabric_api_version}"
 
-    implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}"
-    compileOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+    modImplementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}"
+    modCompileOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
     if (!rootProject.minecraft_version.contains("-")) {
-        runtimeOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
+        modRuntimeOnly "com.terraformersmc:modmenu:${rootProject.modmenu_version}"
     }
 
-    implementation project(":common")
+    implementation project(path: ":common", configuration: "namedElements")
 }
 
 processResources {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     def mcVersion = rootProject.minecraft_version
     def expandMcVersion = mcVersion.contains('-') ? "${mcVersion.split('-')[0]}-" : mcVersion
+    def mcDependency = rootProject.findProperty("minecraft_dependency") ?: ">=1.20 <=1.20.6"
     def expandProps = [
         "version": project.version,
         "loader_version": rootProject.loader_version,
-        "minecraft_version": expandMcVersion
+        "minecraft_version": expandMcVersion,
+        "minecraft_dependency": mcDependency
     ]
     inputs.properties expandProps
 
@@ -53,6 +57,7 @@ processResources {
 }
 
 tasks.named('jar', Jar).configure {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     from project(":common").sourceSets.main.output
 }
 
