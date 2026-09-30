@@ -33,7 +33,7 @@ tasks.register('gameTestAll') {
                 if (line.contains("[GameTest]")) {
                     println "   ${line.substring(line.indexOf('[GameTest]'))}"
                 }
-                if (line.contains("SUCCESS:")) {
+                if (line.contains("SUCCESS:") || line.contains("PASSED")) {
                     passed = true
                 }
                 if (line.contains("AssertionError:") || line.contains("BUILD FAILED")) {
