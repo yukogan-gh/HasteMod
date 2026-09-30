@@ -76,13 +76,13 @@ public class HasteModClient {
 
     private static Object resolveCategory(Class<?> categoryClass) {
         for (Method m : categoryClass.getMethods()) {
-            if (Modifier.isStatic(m.getModifiers()) && m.getName().equals("register") && m.getParameterCount() == 1) {
+            if (Modifier.isStatic(m.getModifiers()) && m.getReturnType() == categoryClass && m.getParameterCount() == 1) {
                 Class<?> idClass = m.getParameterTypes()[0];
                 Object idObj = createIdentifier(idClass, HasteMod.MOD_ID, "controls");
                 try {
                     return m.invoke(null, idObj);
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to invoke KeyMapping.Category.register", e);
+                    throw new RuntimeException("Failed to invoke category registration method", e);
                 }
             }
         }
@@ -93,28 +93,48 @@ public class HasteModClient {
                 try {
                     return c.newInstance(idObj);
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to construct KeyMapping.Category", e);
+                    throw new RuntimeException("Failed to construct KeyMapping Category", e);
                 }
             }
         }
-        throw new IllegalStateException("Could not create or register KeyMapping.Category for " + categoryClass.getName());
+        throw new IllegalStateException("Could not create or register Category for " + categoryClass.getName());
     }
 
     private static Object createIdentifier(Class<?> idClass, String namespace, String path) {
-        try {
-            Method m = idClass.getMethod("fromNamespaceAndPath", String.class, String.class);
-            return m.invoke(null, namespace, path);
-        } catch (Exception ignored) {}
-        try {
-            Method m = idClass.getMethod("of", String.class, String.class);
-            return m.invoke(null, namespace, path);
-        } catch (Exception ignored) {}
-        try {
-            Constructor<?> ctor = idClass.getConstructor(String.class, String.class);
-            return ctor.newInstance(namespace, path);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to instantiate identifier " + idClass.getName(), e);
+        for (Method m : idClass.getMethods()) {
+            if (Modifier.isStatic(m.getModifiers()) && m.getReturnType() == idClass) {
+                if (m.getParameterCount() == 2 && m.getParameterTypes()[0] == String.class && m.getParameterTypes()[1] == String.class) {
+                    try {
+                        return m.invoke(null, namespace, path);
+                    } catch (Exception ignored) {}
+                }
+            }
         }
+        String fullId = namespace + ":" + path;
+        for (Method m : idClass.getMethods()) {
+            if (Modifier.isStatic(m.getModifiers()) && m.getReturnType() == idClass) {
+                if (m.getParameterCount() == 1 && m.getParameterTypes()[0] == String.class) {
+                    try {
+                        return m.invoke(null, fullId);
+                    } catch (Exception ignored) {}
+                }
+            }
+        }
+        for (Constructor<?> ctor : idClass.getConstructors()) {
+            if (ctor.getParameterCount() == 2 && ctor.getParameterTypes()[0] == String.class && ctor.getParameterTypes()[1] == String.class) {
+                try {
+                    return ctor.newInstance(namespace, path);
+                } catch (Exception ignored) {}
+            }
+        }
+        for (Constructor<?> ctor : idClass.getConstructors()) {
+            if (ctor.getParameterCount() == 1 && ctor.getParameterTypes()[0] == String.class) {
+                try {
+                    return ctor.newInstance(fullId);
+                } catch (Exception ignored) {}
+            }
+        }
+        throw new RuntimeException("Failed to instantiate identifier " + idClass.getName());
     }
 
     public static KeyMapping getActivateKey() {
