@@ -5,6 +5,14 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.effect.MobEffectUtil;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.stht.hastemod.client.HasteModClient;
@@ -28,16 +36,16 @@ public class BlockBreaker {
 
         if (HasteModClient.getToggleKey().consumeClick() && !client.isPaused()) {
             enabled = !enabled;
-            client.player.sendSystemMessage(Component.translatable(
-                    enabled ? "msg.hastemod.toggled_on" : "msg.hastemod.toggled_off"));
+            client.player.displayClientMessage(Component.translatable(
+                    enabled ? "msg.hastemod.toggled_on" : "msg.hastemod.toggled_off"), false);
             if (!enabled) return;
         }
 
         if (HasteModClient.getToggleBlockSelKey().consumeClick() && !client.isPaused()) {
             blockSelEnabled = !blockSelEnabled;
-            client.player.sendSystemMessage(Component.translatable(
+            client.player.displayClientMessage(Component.translatable(
                     blockSelEnabled ? "msg.hastemod.block_sel_toggled_on"
-                                    : "msg.hastemod.block_sel_toggled_off"));
+                                    : "msg.hastemod.block_sel_toggled_off"), false);
         }
 
         if (!enabled) return;
@@ -69,8 +77,8 @@ public class BlockBreaker {
 
         BlockState state = client.level.getBlockState(pos);
         if (updateBlock(state.getBlock())) {
-            client.player.sendSystemMessage(Component.translatable(
-                    "msg.hastemod.selected_block", state.getBlock().getName()));
+            client.player.displayClientMessage(Component.translatable(
+                    "msg.hastemod.selected_block", state.getBlock().getName()), false);
         }
     }
 
@@ -80,17 +88,19 @@ public class BlockBreaker {
         if (state.isAir()) return false;
         if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
 
-        int currentSlot = client.player.getInventory().getSelectedSlot();
+        int currentSlot = client.player.getInventory().selected;
         int targetSlot = -1;
 
         if (getDestroyProgress(client, currentSlot, state, blockPos) >= 1.0F) {
             targetSlot = currentSlot;
         } else {
+            float bestProgress = 0.0f;
             for (int i = 0; i < 9; i++) {
                 if (i == currentSlot) continue;
-                if (getDestroyProgress(client, i, state, blockPos) >= 1.0F) {
+                float progress = getDestroyProgress(client, i, state, blockPos);
+                if (progress >= 1.0F && progress > bestProgress) {
                     targetSlot = i;
-                    break;
+                    bestProgress = progress;
                 }
             }
         }
@@ -99,8 +109,33 @@ public class BlockBreaker {
             return false;
         }
 
-        if (client.player.getInventory().getSelectedSlot() != targetSlot) {
-            client.player.getInventory().setSelectedSlot(targetSlot);
+        if (client.player.getInventory().selected != targetSlot) {
+            int oldSlot = client.player.getInventory().selected;
+            ItemStack oldItem = client.player.getInventory().getItem(oldSlot);
+            ItemStack newItem = client.player.getInventory().getItem(targetSlot);
+
+            client.player.getInventory().selected = targetSlot;
+
+            AttributeMap attributes = client.player.getAttributes();
+            if (attributes != null) {
+                if (!oldItem.isEmpty()) {
+                    oldItem.forEachModifier(EquipmentSlot.MAINHAND, (attr, mod) -> {
+                        AttributeInstance instance = attributes.getInstance(attr);
+                        if (instance != null) {
+                            instance.removeModifier(mod.id());
+                        }
+                    });
+                }
+                if (!newItem.isEmpty()) {
+                    newItem.forEachModifier(EquipmentSlot.MAINHAND, (attr, mod) -> {
+                        AttributeInstance instance = attributes.getInstance(attr);
+                        if (instance != null) {
+                            instance.addOrUpdateTransientModifier(mod);
+                        }
+                    });
+                }
+            }
+
             if (client.getConnection() != null) {
                 client.getConnection().send(new ServerboundSetCarriedItemPacket(targetSlot));
             }
@@ -113,19 +148,62 @@ public class BlockBreaker {
     // progress >= 1f --> instamine
     private float getDestroyProgress(Minecraft client, int slot, BlockState state, BlockPos pos) {
         if (client.player == null || client.level == null) return 0.0f;
+        ItemStack stack = client.player.getInventory().getItem(slot);
+        return calculateDestroyProgress(client, stack, state, pos);
+    }
+
+    private float calculateDestroyProgress(Minecraft client, ItemStack stack, BlockState state, BlockPos pos) {
+        if (client.player == null || client.level == null) return 0.0f;
         if (client.player.getAbilities().instabuild) {
             return state.getDestroySpeed(client.level, pos) < 0.0f ? 0.0f : 1.0f;
         }
-        int currentSlot = client.player.getInventory().getSelectedSlot();
-        if (currentSlot == slot) {
-            return state.getDestroyProgress(client.player, client.level, pos);
+        float blockHardness = state.getDestroySpeed(client.level, pos);
+        if (blockHardness < 0.0f) return 0.0f;
+        if (blockHardness == 0.0f) return 1.0f;
+
+        boolean canHarvest = !state.requiresCorrectToolForDrops() || stack.isCorrectToolForDrops(state);
+        int divider = canHarvest ? 30 : 100;
+
+        float speed = stack.getDestroySpeed(state);
+        if (speed > 1.0f) {
+            double[] eff = new double[1];
+            stack.forEachModifier(EquipmentSlot.MAINHAND, (attr, mod) -> {
+                if (attr.is(Attributes.MINING_EFFICIENCY)) {
+                    eff[0] += mod.amount();
+                }
+            });
+            speed += (float) eff[0];
         }
-        client.player.getInventory().setSelectedSlot(slot);
-        try {
-            return state.getDestroyProgress(client.player, client.level, pos);
-        } finally {
-            client.player.getInventory().setSelectedSlot(currentSlot);
+
+        if (MobEffectUtil.hasDigSpeed(client.player)) {
+            speed *= 1.0f + (MobEffectUtil.getDigSpeedAmplification(client.player) + 1) * 0.2f;
         }
+
+        if (client.player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
+            int amp = client.player.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier();
+            float f = switch (amp) {
+                case 0 -> 0.3f;
+                case 1 -> 0.09f;
+                case 2 -> 0.0027f;
+                default -> 8.1e-4f;
+            };
+            speed *= f;
+        }
+
+        speed *= (float) client.player.getAttributeValue(Attributes.BLOCK_BREAK_SPEED);
+
+        if (client.player.isEyeInFluid(FluidTags.WATER)) {
+            AttributeInstance submerged = client.player.getAttribute(Attributes.SUBMERGED_MINING_SPEED);
+            if (submerged != null) {
+                speed *= (float) submerged.getValue();
+            }
+        }
+
+        if (!client.player.onGround()) {
+            speed /= 5.0f;
+        }
+
+        return speed / blockHardness / (float) divider;
     }
 
     private List<BlockPos> collectTargets(Minecraft client, HasteConfig cfg) {
@@ -135,11 +213,12 @@ public class BlockBreaker {
         List<BlockPos> out = new ArrayList<>();
         
         java.util.function.Predicate<BlockPos> isValid = pos -> {
-            if (client.level == null) return false;
+            if (client.level == null || client.player == null) return false;
             BlockState state = client.level.getBlockState(pos);
             if (state.isAir()) return false;
             if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
-            if (!client.player.isWithinBlockInteractionRange(pos, 0.0)) return false;
+            double maxDistSq = client.player.isCreative() ? 36.0 : 25.0;
+            if (client.player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > maxDistSq) return false;
             return true;
         };
 

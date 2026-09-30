@@ -5,7 +5,7 @@
   "name": "HasteMod",
   "description": "A client-side mod that abuses the instamine feature to very quickly mine set types of blocks.",
   "authors": [
-    "Yukogan"
+    "Yukovitsch"
   ],
   "contact": {
     "website": "https://www.stht.org/",
@@ -28,8 +28,8 @@
   "depends": {
     "fabricloader": ">=${loader_version}",
     "fabric-api": "*",
-    "minecraft": "~${minecraft_version}",
-    "java": ">=25"
+    "minecraft": "${minecraft_dependency}",
+    "java": ">=21"
   },
   "suggests": {
     "yet_another_config_lib_v3": ">=3.0.0"
