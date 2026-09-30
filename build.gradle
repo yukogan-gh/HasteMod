@@ -1,5 +1,6 @@
 plugins {
-    id 'net.fabricmc.fabric-loom-remap' version '1.17-SNAPSHOT' apply false
+    id 'java'
+    id 'fabric-loom' version '1.17.21' apply false
 }
 
 def targetMc = findProperty("mc") ?: "1.21.1"
@@ -12,9 +13,36 @@ if (versionFile.exists()) {
     }
 }
 
-subprojects {
-    apply plugin: 'java'
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
 
+allprojects {
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    repositories {
+        mavenCentral()
+        maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://maven.isxander.dev/releases' }
+        maven { url = 'https://maven.terraformersmc.com/releases' }
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.release = 21
+    }
+}
+
+subprojects {
     version = rootProject.mod_version
     group = rootProject.maven_group
 
@@ -22,28 +50,39 @@ subprojects {
         archivesName = "${rootProject.archives_base_name}-${project.name}"
     }
 
-    java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-
     tasks.withType(JavaCompile).configureEach {
-        it.options.release = 21
+        options.encoding = 'UTF-8'
+        options.release = 21
     }
 
-    repositories {
-        mavenCentral()
-        maven { url = "https://maven.isxander.dev/releases" }
-        maven { url = "https://maven.terraformersmc.com/" }
+    processResources {
+        def expandProps = [
+                'version'                  : project.version,
+                'mod_version'              : rootProject.mod_version,
+                'minecraft_version'        : rootProject.minecraft_version,
+                'minecraft_dependency'     : rootProject.minecraft_dependency,
+                'minecraft_version_range'  : rootProject.minecraft_version_range,
+                'loader_version'           : rootProject.loader_version
+        ]
+        filesMatching(['fabric.mod.json', 'META-INF/neoforge.mods.toml']) {
+            expand expandProps
+        }
     }
+}
+
+tasks.register('buildAll') {
+    description = 'Builds the unified Fabric jar for Minecraft 1.21.x'
+    group = 'build'
+    dependsOn ':fabric:build'
 }
 
 tasks.register('smokeTest') {
     description = 'Automated client smoke test: boots each version, confirms clean initialization & audio engine, then shuts down.'
     group = 'verification'
+    dependsOn 'buildAll'
 
     doLast {
-        def versionsToTest = ['1.21.1', '1.21.4']
+        def versionsToTest = ['1.21.1', '1.21.4', '1.21.11']
         println "\n=============================================="
         println "  RUNNING AUTOMATED CLIENT SMOKE TESTS"
         println "=============================================="
@@ -55,6 +94,7 @@ tasks.register('smokeTest') {
             def cmd = ['./gradlew', ':fabric:runClient', "-Pmc=${mcVer}".toString(), '--no-daemon'] as String[]
             def pb = new ProcessBuilder(cmd)
             pb.directory(project.rootDir)
+            pb.environment().put("JAVA_HOME", System.getProperty("java.home"))
             pb.redirectErrorStream(true)
 
             def proc = pb.start()
