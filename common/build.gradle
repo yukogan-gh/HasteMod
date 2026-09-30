@@ -1,5 +1,5 @@
 plugins {
-    id 'net.fabricmc.fabric-loom'
+    id 'net.fabricmc.fabric-loom-remap'
 }
 
 loom {
@@ -7,7 +7,8 @@ loom {
 
 dependencies {
     minecraft "com.mojang:minecraft:${rootProject.minecraft_version}"
+    mappings loom.officialMojangMappings()
 
-    compileOnly "net.fabricmc:fabric-loader:${rootProject.loader_version}"
-    implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}"
+    modCompileOnly "net.fabricmc:fabric-loader:${rootProject.loader_version}"
+    modImplementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_version}"
 }
