@@ -1,7 +1,7 @@
 package org.stht.hastemod.fabric;
 
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.KeyMapping;
 import org.stht.hastemod.platform.services.IPlatformHelper;
@@ -15,7 +15,7 @@ public class FabricPlatformHelper implements IPlatformHelper {
 
     @Override
     public void registerKeyMapping(KeyMapping keyMapping) {
-        KeyMappingHelper.registerKeyMapping(keyMapping);
+        KeyBindingHelper.registerKeyBinding(keyMapping);
     }
 
     @Override

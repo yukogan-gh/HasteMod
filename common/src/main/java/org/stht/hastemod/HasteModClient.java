@@ -5,21 +5,18 @@ import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.Identifier;
 import org.stht.hastemod.HasteMod;
 import org.stht.hastemod.client.config.HasteConfig;
 import org.stht.hastemod.client.feature.BlockBreaker;
 
 public class HasteModClient {
-    private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
-            Identifier.fromNamespaceAndPath(HasteMod.MOD_ID, "controls"));
+    private static final String CATEGORY = "key.category.hastemod.controls";
     private static final BlockBreaker BREAKER = new BlockBreaker();
 
     private static KeyMapping useKey;
     private static KeyMapping toggleKey;
     private static KeyMapping toggleBlockSelKey;
 
-    
     public void onInitializeClient() {
         HasteConfig.get();
 

@@ -80,7 +80,7 @@ public class BlockBreaker {
         if (state.isAir()) return false;
         if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
 
-        int currentSlot = client.player.getInventory().getSelectedSlot();
+        int currentSlot = client.player.getInventory().selected;
         int targetSlot = -1;
 
         if (getDestroyProgress(client, currentSlot, state, blockPos) >= 1.0F) {
@@ -99,8 +99,8 @@ public class BlockBreaker {
             return false;
         }
 
-        if (client.player.getInventory().getSelectedSlot() != targetSlot) {
-            client.player.getInventory().setSelectedSlot(targetSlot);
+        if (client.player.getInventory().selected != targetSlot) {
+            client.player.getInventory().selected = targetSlot;
             if (client.getConnection() != null) {
                 client.getConnection().send(new ServerboundSetCarriedItemPacket(targetSlot));
             }
@@ -116,15 +116,15 @@ public class BlockBreaker {
         if (client.player.getAbilities().instabuild) {
             return state.getDestroySpeed(client.level, pos) < 0.0f ? 0.0f : 1.0f;
         }
-        int currentSlot = client.player.getInventory().getSelectedSlot();
+        int currentSlot = client.player.getInventory().selected;
         if (currentSlot == slot) {
             return state.getDestroyProgress(client.player, client.level, pos);
         }
-        client.player.getInventory().setSelectedSlot(slot);
+        client.player.getInventory().selected = slot;
         try {
             return state.getDestroyProgress(client.player, client.level, pos);
         } finally {
-            client.player.getInventory().setSelectedSlot(currentSlot);
+            client.player.getInventory().selected = currentSlot;
         }
     }
 
@@ -135,11 +135,12 @@ public class BlockBreaker {
         List<BlockPos> out = new ArrayList<>();
         
         java.util.function.Predicate<BlockPos> isValid = pos -> {
-            if (client.level == null) return false;
+            if (client.level == null || client.player == null) return false;
             BlockState state = client.level.getBlockState(pos);
             if (state.isAir()) return false;
             if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
-            if (!client.player.isWithinBlockInteractionRange(pos, 0.0)) return false;
+            double maxDistSq = client.player.isCreative() ? 36.0 : 25.0;
+            if (client.player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > maxDistSq) return false;
             return true;
         };
 

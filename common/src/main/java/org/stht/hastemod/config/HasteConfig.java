@@ -57,9 +57,9 @@ public class HasteConfig {
 
     private HasteConfig sanitized() {
         if (shape == null) shape = Shape.CUBE;
-        radius = Math.clamp(radius, 1, 16);
-        blocksPerTick = Math.clamp(blocksPerTick, 1, 256);
-        tickDelay = Math.clamp(tickDelay, 0, 200);
+        radius = Math.max(1, Math.min(16, radius));
+        blocksPerTick = Math.max(1, Math.min(256, blocksPerTick));
+        tickDelay = Math.max(0, Math.min(200, tickDelay));
         return this;
     }
 }
