@@ -3,21 +3,27 @@ package org.stht.hastemod.client.feature;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.tags.FluidTags;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.stht.hastemod.client.HasteModClient;
 import org.stht.hastemod.client.config.HasteConfig;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,6 +31,12 @@ import java.util.Objects;
 
 public class BlockBreaker {
     private static final Direction DEFAULT_FACE = Direction.UP;
+
+    private static Field selectedSlotField = null;
+    private static Method getSelectedSlotMethod = null;
+    private static Method setSelectedSlotMethod = null;
+    @SuppressWarnings("unchecked")
+    private static Holder<MobEffect> miningFatigueEffect = null;
 
     private Block lastMinedBlock = null;
     private boolean enabled = false;
@@ -88,7 +100,8 @@ public class BlockBreaker {
         if (state.isAir()) return false;
         if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
 
-        int currentSlot = client.player.getInventory().selected;
+        Inventory inventory = client.player.getInventory();
+        int currentSlot = getSelectedSlot(inventory);
         int targetSlot = -1;
 
         if (getDestroyProgress(client, currentSlot, state, blockPos) >= 1.0F) {
@@ -109,12 +122,12 @@ public class BlockBreaker {
             return false;
         }
 
-        if (client.player.getInventory().selected != targetSlot) {
-            int oldSlot = client.player.getInventory().selected;
-            ItemStack oldItem = client.player.getInventory().getItem(oldSlot);
-            ItemStack newItem = client.player.getInventory().getItem(targetSlot);
+        if (currentSlot != targetSlot) {
+            int oldSlot = currentSlot;
+            ItemStack oldItem = inventory.getItem(oldSlot);
+            ItemStack newItem = inventory.getItem(targetSlot);
 
-            client.player.getInventory().selected = targetSlot;
+            setSelectedSlot(inventory, targetSlot);
 
             AttributeMap attributes = client.player.getAttributes();
             if (attributes != null) {
@@ -154,7 +167,7 @@ public class BlockBreaker {
 
     private float calculateDestroyProgress(Minecraft client, ItemStack stack, BlockState state, BlockPos pos) {
         if (client.player == null || client.level == null) return 0.0f;
-        if (client.player.getAbilities().instabuild) {
+        if (isCreativeMode(client)) {
             return state.getDestroySpeed(client.level, pos) < 0.0f ? 0.0f : 1.0f;
         }
         float blockHardness = state.getDestroySpeed(client.level, pos);
@@ -168,7 +181,7 @@ public class BlockBreaker {
         if (speed > 1.0f) {
             double[] eff = new double[1];
             stack.forEachModifier(EquipmentSlot.MAINHAND, (attr, mod) -> {
-                if (attr.is(Attributes.MINING_EFFICIENCY)) {
+                if (Objects.equals(attr, Attributes.MINING_EFFICIENCY)) {
                     eff[0] += mod.amount();
                 }
             });
@@ -179,15 +192,19 @@ public class BlockBreaker {
             speed *= 1.0f + (MobEffectUtil.getDigSpeedAmplification(client.player) + 1) * 0.2f;
         }
 
-        if (client.player.hasEffect(MobEffects.DIG_SLOWDOWN)) {
-            int amp = client.player.getEffect(MobEffects.DIG_SLOWDOWN).getAmplifier();
-            float f = switch (amp) {
-                case 0 -> 0.3f;
-                case 1 -> 0.09f;
-                case 2 -> 0.0027f;
-                default -> 8.1e-4f;
-            };
-            speed *= f;
+        Holder<MobEffect> fatigue = getMiningFatigueEffect();
+        if (fatigue != null && client.player.hasEffect(fatigue)) {
+            MobEffectInstance effect = client.player.getEffect(fatigue);
+            if (effect != null) {
+                int amp = effect.getAmplifier();
+                float f = switch (amp) {
+                    case 0 -> 0.3f;
+                    case 1 -> 0.09f;
+                    case 2 -> 0.0027f;
+                    default -> 8.1e-4f;
+                };
+                speed *= f;
+            }
         }
 
         speed *= (float) client.player.getAttributeValue(Attributes.BLOCK_BREAK_SPEED);
@@ -217,7 +234,7 @@ public class BlockBreaker {
             BlockState state = client.level.getBlockState(pos);
             if (state.isAir()) return false;
             if (blockSelEnabled && !Objects.equals(state.getBlock(), lastMinedBlock)) return false;
-            double maxDistSq = client.player.isCreative() ? 36.0 : 25.0;
+            double maxDistSq = isCreativeMode(client) ? 36.0 : 25.0;
             if (client.player.distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) > maxDistSq) return false;
             return true;
         };
@@ -250,23 +267,20 @@ public class BlockBreaker {
             }
             case TUNNEL -> {
                 Direction facing = client.player.getDirection();
-                int fx = facing.getStepX();
-                int fz = facing.getStepZ();
-                int sx = fz;
-                int sz = -fx;
-                for (int forward = 1; forward <= r; forward++) {
-                    for (int side = -1; side <= 1; side++) {
-                        for (int dy = 0; dy <= 2; dy++) {
-                            int dx = fx * forward + sx * side;
-                            int dz = fz * forward + sz * side;
-                            BlockPos pos = p.offset(dx, dy, dz);
+                for (int d = 1; d <= r; d++)
+                    for (int w = -1; w <= 1; w++)
+                        for (int h = 0; h <= 2; h++) {
+                            BlockPos pos = p.relative(facing, d)
+                                    .relative(facing.getClockWise(), w)
+                                    .above(h);
                             if (isValid.test(pos)) out.add(pos);
                         }
-                    }
-                }
             }
         }
-        out.sort(Comparator.comparingDouble(a -> a.distSqr(p)));
+
+        // prioritize closest to player
+        out.sort(Comparator.comparingDouble(pos -> client.player.distanceToSqr(
+                pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)));
         return out;
     }
 
@@ -274,5 +288,90 @@ public class BlockBreaker {
         if (block == this.lastMinedBlock || !enabled) return false;
         this.lastMinedBlock = block;
         return true;
+    }
+
+    private static boolean isCreativeMode(Minecraft client) {
+        if (client == null || client.player == null) return false;
+        try {
+            if (client.player.getAbilities() != null && client.player.getAbilities().instabuild) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        try {
+            Method m = client.player.getClass().getMethod("isCreative");
+            return (Boolean) m.invoke(client.player);
+        } catch (Throwable ignored) {}
+        return false;
+    }
+
+    private static int getSelectedSlot(Inventory inv) {
+        if (getSelectedSlotMethod != null) {
+            try {
+                return (int) getSelectedSlotMethod.invoke(inv);
+            } catch (Exception ignored) {}
+        }
+        if (selectedSlotField != null) {
+            try {
+                return selectedSlotField.getInt(inv);
+            } catch (Exception ignored) {}
+        }
+        try {
+            Method m = inv.getClass().getMethod("getSelectedSlot");
+            getSelectedSlotMethod = m;
+            return (int) m.invoke(inv);
+        } catch (Exception ignored) {}
+        for (String name : new String[]{"selected", "field_7545"}) {
+            try {
+                Field f = inv.getClass().getDeclaredField(name);
+                f.setAccessible(true);
+                selectedSlotField = f;
+                return f.getInt(inv);
+            } catch (Exception ignored) {}
+        }
+        return 0;
+    }
+
+    private static void setSelectedSlot(Inventory inv, int slot) {
+        if (setSelectedSlotMethod != null) {
+            try {
+                setSelectedSlotMethod.invoke(inv, slot);
+                return;
+            } catch (Exception ignored) {}
+        }
+        if (selectedSlotField != null) {
+            try {
+                selectedSlotField.setInt(inv, slot);
+                return;
+            } catch (Exception ignored) {}
+        }
+        try {
+            Method m = inv.getClass().getMethod("setSelectedSlot", int.class);
+            setSelectedSlotMethod = m;
+            m.invoke(inv, slot);
+            return;
+        } catch (Exception ignored) {}
+        for (String name : new String[]{"selected", "field_7545"}) {
+            try {
+                Field f = inv.getClass().getDeclaredField(name);
+                f.setAccessible(true);
+                selectedSlotField = f;
+                f.setInt(inv, slot);
+                return;
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Holder<MobEffect> getMiningFatigueEffect() {
+        if (miningFatigueEffect == null) {
+            for (String fieldName : new String[]{"MINING_FATIGUE", "DIG_SLOWDOWN", "field_5919"}) {
+                try {
+                    Field f = MobEffects.class.getField(fieldName);
+                    miningFatigueEffect = (Holder<MobEffect>) f.get(null);
+                    break;
+                } catch (Exception ignored) {}
+            }
+        }
+        return miningFatigueEffect;
     }
 }
