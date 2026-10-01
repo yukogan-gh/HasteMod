@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "hastemod-gametest",
+  "version": "1.0.0",
+  "name": "HasteMod Game Tests",
+  "environment": "client",
+  "entrypoints": {
+    "fabric-client-gametest": [
+      "org.stht.hastemod.fabric.test.HasteModClientGameTest"
+    ]
+  },
+  "depends": {
+    "fabricloader": "*",
+    "minecraft": "*",
+    "hastemod": "*"
+  }
+}
