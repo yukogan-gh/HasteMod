@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.stht.hastemod.client.HasteModClient;
 import org.stht.hastemod.client.config.HasteConfig;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Objects;
 
 public class BlockBreaker {
     private static final Direction DEFAULT_FACE = Direction.UP;
+    private static Method sendPacketMethod = null;
 
     private Block lastMinedBlock = null;
     private boolean enabled = false;
@@ -101,13 +103,49 @@ public class BlockBreaker {
 
         if (client.player.getInventory().selected != targetSlot) {
             client.player.getInventory().selected = targetSlot;
-            if (client.getConnection() != null) {
-                client.getConnection().send(new ServerboundSetCarriedItemPacket(targetSlot));
-            }
+            sendPacket(client, new ServerboundSetCarriedItemPacket(targetSlot));
         }
 
         client.gameMode.startDestroyBlock(blockPos, DEFAULT_FACE);
         return true;
+    }
+
+    private static void sendPacket(Minecraft client, Object packet) {
+        Object connection = client.getConnection();
+        if (connection == null) return;
+        if (sendPacketMethod != null) {
+            try {
+                sendPacketMethod.invoke(connection, packet);
+                return;
+            } catch (Exception ignored) {}
+        }
+
+        // Try known method names:
+        // "send" (Mojang dev), "sendPacket" (Yarn dev), "method_52787" (1.20.5+ / 1.21+ intermediary), "method_2883" (<=1.20.4 intermediary)
+        for (String name : new String[]{"send", "sendPacket", "method_52787", "method_2883"}) {
+            try {
+                for (Method m : connection.getClass().getMethods()) {
+                    if (m.getName().equals(name) && m.getParameterCount() == 1 && m.getParameterTypes()[0].isInstance(packet)) {
+                        m.setAccessible(true);
+                        sendPacketMethod = m;
+                        m.invoke(connection, packet);
+                        return;
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
+
+        // Fallback: any single-parameter method accepting the packet and returning void
+        for (Method m : connection.getClass().getMethods()) {
+            if (m.getParameterCount() == 1 && m.getReturnType() == void.class && m.getParameterTypes()[0].isInstance(packet)) {
+                try {
+                    m.setAccessible(true);
+                    sendPacketMethod = m;
+                    m.invoke(connection, packet);
+                    return;
+                } catch (Exception ignored) {}
+            }
+        }
     }
 
     // progress >= 1f --> instamine
