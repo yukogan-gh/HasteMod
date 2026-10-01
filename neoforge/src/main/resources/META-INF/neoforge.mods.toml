@@ -8,7 +8,7 @@ modId="hastemod"
 version="${version}"
 displayName="HasteMod"
 description='''
-A client-side mod that abuses the instamine feature to very quickly mine set types of blocks.
+A client-side mod that abuses the instamine feature to very quickly mine set types of blocks across customizable shapes.
 '''
 authors="Yukogan"
 displayURL="https://github.com/YukoganDev/HasteMod"

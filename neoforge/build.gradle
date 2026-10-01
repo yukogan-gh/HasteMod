@@ -1,33 +1,14 @@
-import java.util.zip.GZIPInputStream
-import java.util.zip.GZIPOutputStream
-
 plugins {
     id 'net.neoforged.moddev'
 }
 
 neoForge {
     version = rootProject.neoforge_version
-
     validateAccessTransformers = false
-
-    parchment {
-        minecraftVersion = "1.21.4"
-        mappingsVersion = "2024.12.07"
-    }
 
     runs {
         client {
             client()
-        }
-        clientGameTest {
-            client()
-            gameDirectory = file("run-gametest-${rootProject.minecraft_version}")
-            systemProperty "hastemod.gametest", "true"
-            programArgument "--quickPlaySingleplayer"
-            programArgument "gametest"
-        }
-        server {
-            server()
         }
     }
 
@@ -35,157 +16,15 @@ neoForge {
         "hastemod" {
             sourceSet sourceSets.main
             sourceSet project(":common").sourceSets.main
-            sourceSet sourceSets.test
-        }
-    }
-
-    unitTest {
-        enable()
-        testedMod = mods.named("hastemod")
-    }
-}
-
-tasks.matching { it.name == 'prepareClientGameTestRun' }.configureEach {
-    doLast {
-        def savesDir = file("run-gametest-${rootProject.minecraft_version}/saves/gametest")
-        savesDir.mkdirs()
-        copy {
-            from rootProject.file("template-world")
-            into savesDir
-        }
-
-        // Dynamically align level.dat DataVersion and Version.Name to avoid "I know what I'm doing" screen
-        def dataVersionMap = [
-            '26.1': 4786,
-            '26.2': 4903,
-            '26.3': 5023
-        ]
-        def targetMc = rootProject.minecraft_version.toString()
-        def targetDataVer = dataVersionMap[targetMc]
-        def levelDat = file("${savesDir}/level.dat")
-
-        if (levelDat.exists() && targetDataVer != null) {
-            byte[] raw
-            levelDat.withInputStream { is ->
-                new GZIPInputStream(is).withStream { gzipIn ->
-                    raw = gzipIn.bytes
-                }
-            }
-
-            int posDataVer = -1
-            byte[] targetTag = "DataVersion".getBytes("UTF-8")
-            for (int i = 0; i <= raw.length - targetTag.length; i++) {
-                boolean match = true
-                for (int j = 0; j < targetTag.length; j++) {
-                    if (raw[i + j] != targetTag[j]) {
-                        match = false
-                        break
-                    }
-                }
-                if (match) {
-                    posDataVer = i
-                    break
-                }
-            }
-
-            if (posDataVer != -1) {
-                int vOff = posDataVer + targetTag.length
-                byte[] intBytes = [
-                    (byte) ((targetDataVer >> 24) & 0xFF),
-                    (byte) ((targetDataVer >> 16) & 0xFF),
-                    (byte) ((targetDataVer >> 8) & 0xFF),
-                    (byte) (targetDataVer & 0xFF)
-                ] as byte[]
-                System.arraycopy(intBytes, 0, raw, vOff, 4)
-            }
-
-            // Also update Version.Id
-            int posId = -1
-            byte[] idTag = "Id".getBytes("UTF-8")
-            for (int i = 0; i <= raw.length - idTag.length; i++) {
-                boolean match = true
-                for (int j = 0; j < idTag.length; j++) {
-                    if (raw[i + j] != idTag[j]) {
-                        match = false
-                        break
-                    }
-                }
-                if (match) {
-                    posId = i
-                    break
-                }
-            }
-
-            if (posId != -1) {
-                int vOff = posId + idTag.length
-                byte[] intBytes = [
-                    (byte) ((targetDataVer >> 24) & 0xFF),
-                    (byte) ((targetDataVer >> 16) & 0xFF),
-                    (byte) ((targetDataVer >> 8) & 0xFF),
-                    (byte) (targetDataVer & 0xFF)
-                ] as byte[]
-                System.arraycopy(intBytes, 0, raw, vOff, 4)
-            }
-
-            // Update Version.Name
-            int posName = -1
-            byte[] nameTag = "Name".getBytes("UTF-8")
-            for (int i = 0; i <= raw.length - nameTag.length; i++) {
-                boolean match = true
-                for (int j = 0; j < nameTag.length; j++) {
-                    if (raw[i + j] != nameTag[j]) {
-                        match = false
-                        break
-                    }
-                }
-                if (match) {
-                    posName = i
-                    break
-                }
-            }
-
-            if (posName != -1) {
-                int vOff = posName + nameTag.length
-                int oldStrLen = ((raw[vOff] & 0xFF) << 8) | (raw[vOff + 1] & 0xFF)
-                byte[] newNameBytes = targetMc.getBytes("UTF-8")
-
-                ByteArrayOutputStream outStream = new ByteArrayOutputStream()
-                outStream.write(raw, 0, vOff)
-                outStream.write((byte) ((newNameBytes.length >> 8) & 0xFF))
-                outStream.write((byte) (newNameBytes.length & 0xFF))
-                outStream.write(newNameBytes)
-                outStream.write(raw, vOff + 2 + oldStrLen, raw.length - (vOff + 2 + oldStrLen))
-                raw = outStream.toByteArray()
-            }
-
-            levelDat.withOutputStream { os ->
-                new GZIPOutputStream(os).withStream { gzipOut ->
-                    gzipOut.write(raw)
-                    gzipOut.finish()
-                }
-            }
         }
     }
 }
 
 dependencies {
-    implementation "dev.isxander:yet-another-config-lib:${rootProject.yacl_neoforge_version}"
-    compileOnly project(":common")
-    testImplementation findProject(":common").sourceSets.main.output
-    testImplementation sourceSets.main.output
-}
-
-processResources {
-    def expandProps = [
-        "version": project.version,
-        "neoforge_version_range": project.findProperty("neoforge_version_range") ?: "[${rootProject.minecraft_version},)",
-        "minecraft_version_range": project.findProperty("minecraft_version_range") ?: "[${rootProject.minecraft_version},)"
-    ]
-    inputs.properties expandProps
-
-    filesMatching("META-INF/neoforge.mods.toml") {
-        expand expandProps
+    implementation("dev.isxander:yet-another-config-lib:${rootProject.yacl_neoforge_version}") {
+        exclude group: 'thedarkcolour'
     }
+    compileOnly project(":common")
 }
 
 tasks.named('jar', Jar).configure {

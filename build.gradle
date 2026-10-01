@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'fabric-loom' version '1.17.21' apply false
+    id 'net.neoforged.moddev' version "${neoforge_moddev_version}" apply false
 }
 
 def targetMc = findProperty("mc") ?: "1.21.1"
@@ -26,8 +27,10 @@ allprojects {
     repositories {
         mavenCentral()
         maven { url = 'https://maven.fabricmc.net/' }
+        maven { url = 'https://maven.neoforged.net/releases/' }
         maven { url = 'https://maven.isxander.dev/releases' }
         maven { url = 'https://maven.terraformersmc.com/releases' }
+        maven { url = 'https://thedarkcolour.github.io/KotlinForForge/' }
     }
 
     java {
@@ -60,8 +63,9 @@ subprojects {
                 'version'                  : project.version,
                 'mod_version'              : rootProject.mod_version,
                 'minecraft_version'        : rootProject.minecraft_version,
-                'minecraft_dependency'     : rootProject.minecraft_dependency,
-                'minecraft_version_range'  : rootProject.minecraft_version_range,
+                'minecraft_dependency'     : rootProject.findProperty('minecraft_dependency') ?: '>=1.21 <=1.21.11',
+                'minecraft_version_range'  : rootProject.findProperty('minecraft_version_range') ?: '[1.21, 1.22)',
+                'neoforge_version_range'   : rootProject.findProperty('neoforge_version_range') ?: '[21.0, 22.0)',
                 'loader_version'           : rootProject.loader_version
         ]
         filesMatching(['fabric.mod.json', 'META-INF/neoforge.mods.toml']) {
@@ -71,9 +75,9 @@ subprojects {
 }
 
 tasks.register('buildAll') {
-    description = 'Builds the unified Fabric jar for Minecraft 1.21.x'
+    description = 'Builds the unified Fabric and NeoForge jars for Minecraft 1.21.x'
     group = 'build'
-    dependsOn ':fabric:build'
+    dependsOn ':fabric:build', ':neoforge:build'
 }
 
 tasks.register('smokeTest') {
