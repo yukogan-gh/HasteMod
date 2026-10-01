@@ -1,17 +1,20 @@
+https://github.com/user-attachments/assets/a254dca6-3b33-453c-9bf7-786fbfff2427
+
+
 # HasteMod
 A client-side mod that abuses the instamine feature to quickly mine surrounding blocks.
 
 ## Requirements
-* **[Fabric API](https://modrinth.com/mod/fabric-api)** (Required, fabric only)
+- **[Fabric API](https://modrinth.com/mod/fabric-api)** (Required, fabric only)
 
-## Optional
-* **[YetAnotherConfigLib (YACL)](https://modrinth.com/mod/yacl)** (Optional, for in-game config GUI)
-* **[Mod Menu](https://modrinth.com/mod/modmenu)** (Optional, to access the config screen, fabric only)
+## Compatible
+- **[YetAnotherConfigLib (YACL)](https://modrinth.com/mod/yacl)** (Optional, for in-game config GUI)
+- **[Mod Menu](https://modrinth.com/mod/modmenu)** (Optional, to access the config screen, fabric only)
 
 ## Default Controls
-* `U`: Toggle mod on / off
-* `X`: Hold to break blocks (when instamine is possible)
-* `Y`: Toggle Block Selection Mode on / off
+- `U`: Toggle mod on / off
+- `X`: Hold to break blocks (when instamine is possible)
+- `Y`: Toggle Block Selection Mode on / off
 > *Note: Ensure your keybinds do not conflict in the Minecraft Controls menu.*
 
 ## How to Use
@@ -21,6 +24,6 @@ A client-side mod that abuses the instamine feature to quickly mine surrounding 
 
 ## Configuration
 When YACL and Mod Menu are installed, you can configure:
-* **Mining Shape**: `Cube`, `Sphere`, `Layer` (at your feet), or `Tunnel` (3×3 in your facing direction)
-* **Radius**: How far the shape extends (1–16 blocks)
-* **Throttle**: Max blocks broken per tick and tick delay between attempts (useful to avoid server anticheat kicks)
+**Mining Shape**: `Cube`, `Sphere`, `Layer` (at your feet), or `Tunnel` (3×3 in your facing direction)
+**Radius**: How far the shape extends (1–16 blocks)
+**Throttle**: Max blocks broken per tick and tick delay between attempts (useful to avoid server anticheat kicks)
