@@ -14,6 +14,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
@@ -135,7 +136,7 @@ public class BlockBreaker {
                     oldItem.forEachModifier(EquipmentSlot.MAINHAND, (attr, mod) -> {
                         AttributeInstance instance = attributes.getInstance(attr);
                         if (instance != null) {
-                            instance.removeModifier(mod.id());
+                            removeModifier(instance, mod);
                         }
                     });
                 }
@@ -359,6 +360,49 @@ public class BlockBreaker {
                 return;
             } catch (Exception ignored) {}
         }
+    }
+
+    private static void removeModifier(AttributeInstance instance, AttributeModifier mod) {
+        try {
+            instance.removeModifier(mod);
+            return;
+        } catch (Throwable ignored) {}
+
+        try {
+            for (Method m : instance.getClass().getMethods()) {
+                if (m.getName().equals("removeModifier") && m.getParameterCount() == 1) {
+                    Class<?> paramType = m.getParameterTypes()[0];
+                    if (paramType.isAssignableFrom(mod.getClass())) {
+                        m.invoke(instance, mod);
+                        return;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        try {
+            Method getIdMethod = null;
+            for (String name : new String[]{"id", "getId"}) {
+                try {
+                    getIdMethod = mod.getClass().getMethod(name);
+                    break;
+                } catch (NoSuchMethodException ignored) {}
+            }
+            if (getIdMethod != null) {
+                Object id = getIdMethod.invoke(mod);
+                if (id != null) {
+                    for (Method m : instance.getClass().getMethods()) {
+                        if (m.getName().equals("removeModifier") && m.getParameterCount() == 1) {
+                            Class<?> paramType = m.getParameterTypes()[0];
+                            if (paramType.isInstance(id)) {
+                                m.invoke(instance, id);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Throwable ignored) {}
     }
 
     @SuppressWarnings("unchecked")
