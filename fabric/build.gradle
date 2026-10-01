@@ -54,6 +54,7 @@ processResources {
 
 tasks.named('jar', Jar).configure {
     from project(":common").sourceSets.main.output
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.withType(Test).configureEach {

@@ -48,6 +48,7 @@ neoForge {
 tasks.matching { it.name == 'prepareClientGameTestRun' }.configureEach {
     doLast {
         def savesDir = file("run-gametest-${rootProject.minecraft_version}/saves/gametest")
+        delete(savesDir)
         savesDir.mkdirs()
         copy {
             from rootProject.file("template-world")
@@ -55,10 +56,10 @@ tasks.matching { it.name == 'prepareClientGameTestRun' }.configureEach {
         }
 
         // Dynamically align level.dat DataVersion and Version.Name to avoid "I know what I'm doing" screen
-        def dataVersionMap = [
-            '26.1': 4786,
-            '26.2': 4903,
-            '26.3': 5023
+        def dataVersionMap = [\
+            '26.1': 4786,\
+            '26.2': 4903,\
+            '26.3': 5023\
         ]
         def targetMc = rootProject.minecraft_version.toString()
         def targetDataVer = dataVersionMap[targetMc]
@@ -178,8 +179,8 @@ dependencies {
 processResources {
     def expandProps = [
         "version": project.version,
-        "neoforge_version_range": project.findProperty("neoforge_version_range") ?: "[${rootProject.minecraft_version},)",
-        "minecraft_version_range": project.findProperty("minecraft_version_range") ?: "[${rootProject.minecraft_version},)"
+        "neoforge_version_range": rootProject.neoforge_version_range ?: "[${rootProject.minecraft_version},)",
+        "minecraft_version_range": rootProject.minecraft_version_range ?: "[${rootProject.minecraft_version},)"
     ]
     inputs.properties expandProps
 
@@ -191,4 +192,8 @@ processResources {
 tasks.named('jar', Jar).configure {
     from project(":common").sourceSets.main.output
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
 }
