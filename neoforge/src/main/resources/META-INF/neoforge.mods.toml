@@ -1,7 +1,7 @@
 modLoader="javafml"
 loaderVersion="[2,)"
 license="MIT"
-issueTrackerURL="https://github.com/YukoganDev/HasteMod/issues"
+issueTrackerURL="https://github.com/yukovitsch/HasteMod/issues"
 
 [[mods]]
 modId="hastemod"
@@ -10,8 +10,8 @@ displayName="HasteMod"
 description='''
 A client-side mod that abuses the instamine feature to very quickly mine set types of blocks.
 '''
-authors="Yukogan"
-displayURL="https://github.com/YukoganDev/HasteMod"
+authors="Yukovitsch"
+displayURL="https://github.com/yukovitsch/HasteMod"
 logoFile="assets/hastemod/icon.png"
 logoBlur=false
 displayTest="IGNORE_ALL_VERSION"
